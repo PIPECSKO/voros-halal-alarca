@@ -1,0 +1,27 @@
+{
+  "name": "voros-halal-alarca",
+  "version": "1.0.0",
+  "description": "Hungarian multiplayer social deduction game - The Red Death's Mask",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "build": "echo 'No build step needed'",
+    "test": "echo 'No tests specified'"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "keywords": [
+    "game",
+    "multiplayer",
+    "hungarian",
+    "social-deduction"
+  ],
+  "author": "Vörös Halál Álarca Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.1.0",
+    "socket.io": "^4.8.1"
+  }
+}
