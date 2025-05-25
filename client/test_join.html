@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Test - Vörös halál álarca</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Menu Screen -->
+        <div id="menu-screen" class="screen" style="display: flex;">
+            <div class="menu-container modern-menu">
+                <h1 class="menu-title">Vörös halál álarca - Csatlakozás teszt</h1>
+                <div class="input-group">
+                    <input type="text" id="username-input" placeholder="Add meg a neved..." maxlength="16">
+                </div>
+                <div class="button-group">
+                    <button id="join-button" class="menu-button">Csatlakozás</button>
+                </div>
+                <div class="input-group" id="join-code-group" style="display:none;">
+                    <label for="game-code-input" style="color: #8b0000; margin-bottom: 5px; display: block;">Add meg a szobakódot:</label>
+                    <input type="text" id="game-code-input" placeholder="Szobakód..." maxlength="8">
+                </div>
+                <div id="test-output" style="margin-top: 20px; padding: 10px; background: #1a0000; border: 1px solid #8b0000; color: #8b0000; display: none;">
+                    <h3>Teszt eredmény:</h3>
+                    <div id="test-result"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Message Overlay -->
+        <div id="error-message" class="overlay" style="display: none;">
+            <div class="error-content">
+                <h2>Hiba</h2>
+                <p id="error-text"></p>
+                <button id="error-ok-button">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Mock Game object for testing
+        window.Game = {
+            username: null,
+            socket: null
+        };
+
+        // Mock UI object for testing
+        window.UI = {
+            showError: function(message) {
+                console.log("UI Error:", message);
+                const errorText = document.getElementById('error-text');
+                if (errorText) {
+                    errorText.textContent = message;
+                }
+                const errorOverlay = document.getElementById('error-message');
+                if (errorOverlay) {
+                    errorOverlay.style.display = 'flex';
+                }
+            }
+        };
+
+        // Test join button functionality
+        document.getElementById('join-button').addEventListener('click', () => {
+            const username = document.getElementById('username-input')?.value?.trim() || '';
+            const gameCode = document.getElementById('game-code-input')?.value?.trim() || '';
+            const joinCodeGroup = document.getElementById('join-code-group');
+            const testOutput = document.getElementById('test-output');
+            const testResult = document.getElementById('test-result');
+            
+            testOutput.style.display = 'block';
+            
+            if (!username) {
+                window.UI.showError("Kérlek, add meg a neved!");
+                testResult.innerHTML = '<span style="color: red;">❌ Hiba: Név hiányzik</span>';
+                return;
+            }
+            
+            window.Game.username = username;
+            
+            // Ha nincs szobakód megadva, mutassuk meg a szobakód beviteli mezőt
+            if (!gameCode) {
+                if (joinCodeGroup) {
+                    joinCodeGroup.style.display = 'block';
+                    const gameCodeInput = document.getElementById('game-code-input');
+                    if (gameCodeInput) {
+                        gameCodeInput.focus();
+                    }
+                }
+                testResult.innerHTML = '<span style="color: orange;">⚠️ Szobakód input mező megjelent</span>';
+                return;
+            }
+            
+            // Ha van szobakód, próbáljunk csatlakozni
+            if (window.Game.socket && window.Game.socket.connected) {
+                testResult.innerHTML = '<span style="color: green;">✅ Socket csatlakozás kísérlet</span>';
+                // Game.socket.emit('joinGame', { gameCode, username });
+            } else {
+                console.log("Socket not connected, attempting to join offline with code:", gameCode);
+                window.UI.showError("Nincs kapcsolat a szerverrel. Próbáld újra később, vagy ellenőrizd az internetkapcsolatot.");
+                testResult.innerHTML = '<span style="color: red;">❌ Nincs socket kapcsolat</span>';
+            }
+        });
+
+        // Add Enter key handler for game code input
+        const gameCodeInput = document.getElementById('game-code-input');
+        if (gameCodeInput) {
+            gameCodeInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    // Trigger the join button click
+                    const joinButton = document.getElementById('join-button');
+                    if (joinButton) {
+                        joinButton.click();
+                    }
+                }
+            });
+        }
+
+        // Error OK button
+        document.getElementById('error-ok-button').addEventListener('click', () => {
+            document.getElementById('error-message').style.display = 'none';
+        });
+
+        console.log('Join test loaded successfully');
+    </script>
+</body>
+</html> 

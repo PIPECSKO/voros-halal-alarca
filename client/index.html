@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Red Death's Mask</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="game-container">
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="screen" style="display: none;">
+      <div class="loading-content">
+        <h1 class="loading-title animated-title">Vörös halál álarca</h1>
+        <div class="loading-bar">
+          <div class="loading-progress"></div>
+        </div>
+        <div class="loading-tip">Kérlek, várj amíg a bál előkészül...</div>
+      </div>
+    </div>
+    
+    <!-- Menu Screen -->
+    <div id="menu-screen" class="screen" style="display: flex;">
+      <div class="menu-container modern-menu">
+        <h1 class="menu-title">Vörös halál álarca</h1>
+        <div class="input-group">
+          <input type="text" id="username-input" placeholder="Add meg a neved..." maxlength="16">
+        </div>
+        <div class="button-group">
+          <button id="host-button" class="menu-button">Játék indítása</button>
+          <button id="join-button" class="menu-button">Csatlakozás</button>
+          <button id="fullscreen-button" class="menu-button">🖥️ Teljes képernyő</button>
+        </div>
+        <div class="input-group" id="join-code-group" style="display:none;">
+          <label for="game-code-input" style="color: #8b0000; margin-bottom: 5px; display: block;">Add meg a szobakódot:</label>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" id="game-code-input" placeholder="Szobakód..." maxlength="8" style="flex: 1;">
+            <button id="join-now-button" class="menu-button" style="margin: 0;">Csatlakozás most</button>
+          </div>
+        </div>
+        <div class="game-code-container" style="display: none;">
+          <p>Szobakód: <span id="game-code"></span></p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Lobby Screen -->
+    <div id="lobby-screen" class="screen" style="display: none;">
+      <div class="lobby-container">
+        <h2>Váróterem</h2>
+        <div class="lobby-flex">
+          <div class="player-list">
+            <h3>Játékosok</h3>
+            <ul id="player-list"></ul>
+          </div>
+          <div class="character-select-panel">
+            <h3>Karakterválasztás</h3>
+            <div class="character-gender-group">
+              <button id="gender-male" class="menu-button">Férfi</button>
+              <button id="gender-female" class="menu-button">Nő</button>
+            </div>
+            <div id="character-gallery" class="character-gallery"></div>
+            <div class="character-preview-label">Előnézet</div>
+            <div id="character-preview" class="character-preview"></div>
+            <button id="character-select-confirm" class="menu-button">Kiválasztom</button>
+          </div>
+        </div>
+        <div class="button-group">
+          <button id="ready-button">Kész vagyok</button>
+          <button id="start-button" style="display: none;">Játék indítása</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen" style="display: none;">
+      <canvas id="game-canvas"></canvas>
+      <div class="game-ui">
+        <div class="role-display"></div>
+        <div class="timer-display"></div>
+        <div class="mini-map"></div>
+        
+        <!-- Fullscreen Indicator -->
+        <div id="fullscreen-indicator" style="position: absolute; top: 10px; right: 10px; background: rgba(26, 0, 0, 0.8); color: #8b0000; padding: 5px 10px; border: 1px solid #8b0000; font-size: 12px; display: none;">
+          📺 Teljes képernyő - ESC a kilépéshez
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <button id="infect-button" class="action-button" style="display: none;">
+            <span class="action-icon">🦠</span>
+            <span class="action-text">Fertőz</span>
+          </button>
+          <button id="stab-button" class="action-button" style="display: none;">
+            <span class="action-icon">⚔️</span>
+            <span class="action-text">Suhint</span>
+          </button>
+          <button id="task-button" class="action-button" style="display: none;">
+            <span class="action-icon">📜</span>
+            <span class="action-text">Feladat</span>
+          </button>
+          <button id="clean-body-button" class="action-button" style="display: none;">
+            <span class="action-icon">🧹</span>
+            <span class="action-text">Takarítás</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Discussion Screen -->
+    <div id="discussion-screen" class="screen" style="display: none;">
+      <div class="discussion-content">
+        <h1>Megbeszélés</h1>
+        <div id="discussion-timer">00:00</div>
+        <div class="discussion-table">
+          <table id="discussion-table">
+            <!-- Table content will be populated dynamically -->
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="screen" style="display: none;">
+      <div class="game-over-content">
+        <h1>Játék vége</h1>
+        <div id="winner-message"></div>
+        <div class="role-reveals">
+          <!-- Role reveals will be populated dynamically -->
+        </div>
+        <button id="return-to-menu-button">Vissza a menübe</button>
+      </div>
+    </div>
+    
+    <!-- Error Message Overlay -->
+    <div id="error-message" class="overlay">
+      <div class="error-content">
+        <h2>Hiba</h2>
+        <p id="error-text"></p>
+        <button id="error-ok-button">OK</button>
+      </div>
+    </div>
+    
+    <!-- Debug Controls (Hidden by default) -->
+    <div id="debug-controls" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; z-index: 1000; display: none;">
+      <h3 style="color: red; margin: 0 0 5px 0;">Debug</h3>
+      <div>
+        <label for="debug-role">Role:</label>
+        <select id="debug-role">
+          <option value="prince">Prince</option>
+          <option value="noble">Noble</option>
+          <option value="commoner">Commoner</option>
+          <option value="plague">Plague</option>
+        </select>
+      </div>
+      <div>
+        <input type="checkbox" id="debug-show-shapes">
+        <label for="debug-show-shapes">Show shapes</label>
+      </div>
+      <div style="margin-top: 10px;">
+        <a href="/connection-test" target="_blank" style="color: #00ff00; text-decoration: underline;">Open Connection Test</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connection Status Indicator -->
+  <div id="connection-status" class="status-connecting">
+    <div id="connection-indicator"></div>
+    <span id="connection-text">Kapcsolódás...</span>
+  </div>
+
+  <!-- Socket.IO Client -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  
+  <!-- Game Scripts -->
+  <script type="module">
+    // Show the loading screen immediately
+    document.getElementById('loading-screen').style.display = 'flex';
+    
+    // Manually show a progress animation
+    const progress = document.querySelector('.loading-progress');
+    let width = 0;
+    const interval = setInterval(() => {
+      if (width >= 100) {
+        clearInterval(interval);
+        // Skip directly to the menu screen after loading completes
+        document.getElementById('loading-screen').style.display = 'none';
+        document.getElementById('menu-screen').style.display = 'flex';
+      } else {
+        width += 2;
+        progress.style.width = width + '%';
+      }
+    }, 50);
+    
+    // Enable debug mode
+    window.debugMode = true;
+  </script>
+  
+  <script type="module" src="src/main.js"></script>
+</body>
+</html> 
