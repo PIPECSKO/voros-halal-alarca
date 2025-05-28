@@ -959,9 +959,8 @@ const Game = {
   handleConnect() {
     console.log('Connected to server');
     this.playerId = this.socket.id;
-    // Make sure it's also available globally for UI
-    window.Game = window.Game || {};
-    window.Game.playerId = this.socket.id;
+    // Make Game object globally accessible for UI
+    window.Game = this;
     console.log('Player ID set to:', this.socket.id);
   },
   
@@ -982,6 +981,9 @@ const Game = {
     this.isHost = true;
     this.username = this.username || document.getElementById('username-input')?.value.trim();
     
+    // Make Game object globally accessible for UI
+    window.Game = this;
+    
     // Create the lobby interface with the real game code
     this.createLobbyInterface(this.username, gameCode);
     
@@ -996,6 +998,9 @@ const Game = {
     this.gameCode = gameCode;
     this.isHost = false;
     this.username = this.username || document.getElementById('username-input')?.value?.trim();
+    
+    // Make Game object globally accessible for UI
+    window.Game = this;
     
     // Create the SAME lobby interface as the host
     this.createLobbyInterface(this.username, gameCode);
