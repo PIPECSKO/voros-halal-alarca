@@ -199,13 +199,26 @@ io.on('connection', (socket) => {
   // Handle player ready status
   socket.on('toggleReady', () => {
     const gameCode = socket.gameCode;
-    if (!gameCode || !games[gameCode]) return;
+    if (!gameCode || !games[gameCode]) {
+      console.log('toggleReady: No game found for socket', socket.id);
+      return;
+    }
 
     const player = games[gameCode].players.find(p => p.id === socket.id);
     if (player) {
       player.ready = !player.ready;
-      console.log('TOGGLE READY DEBUG:', games[gameCode].players.map(p => ({id: p.id, name: p.name, ready: p.ready})));
+      console.log(`Player ${player.name} (${socket.id}) toggled ready to: ${player.ready}`);
+      console.log('Current players in game:', games[gameCode].players.map(p => ({
+        id: p.id, 
+        name: p.name, 
+        ready: p.ready
+      })));
+      
+      // Emit to ALL players in the game room
       io.to(gameCode).emit('updatePlayerList', games[gameCode].players);
+      console.log(`Emitted updatePlayerList to room ${gameCode} with ${games[gameCode].players.length} players`);
+    } else {
+      console.log('toggleReady: Player not found in game', socket.id);
     }
   });
 
@@ -254,12 +267,11 @@ io.on('connection', (socket) => {
 
   // Handle player movement
   socket.on('updatePosition', (position) => {
-    // Get the current game
-    const game = getCurrentGame(socket.id);
-    if (!game) return;
+    const gameCode = socket.gameCode;
+    if (!gameCode || !games[gameCode]) return;
     
     // Get the player
-    const player = game.players.find(p => p.id === socket.id);
+    const player = games[gameCode].players.find(p => p.id === socket.id);
     if (!player) return;
     
     // Update player position
@@ -268,12 +280,12 @@ io.on('connection', (socket) => {
     player.direction = position.direction || 'right';
     player.animationFrame = position.animationFrame || 0;
     
-    // Broadcast position to other players in the same room
-    socket.to(player.room).emit('playerMoved', {
+    // Broadcast position to other players in the same game
+    socket.to(gameCode).emit('playerMoved', {
       id: socket.id,
       name: player.name,
       position: player.position,
-      role: game.roles ? game.roles[socket.id] : 'commoner',
+      role: games[gameCode].roles ? games[gameCode].roles[socket.id] : 'commoner',
       isDead: player.isDead || false,
       isGhost: player.isGhost || false,
       isMoving: player.isMoving,
@@ -405,6 +417,17 @@ io.on('connection', (socket) => {
 });
 
 // Helper functions
+function getCurrentGame(socketId) {
+  // Find which game this socket belongs to
+  for (const gameCode in games) {
+    const game = games[gameCode];
+    if (game.players.find(p => p.id === socketId)) {
+      return game;
+    }
+  }
+  return null;
+}
+
 function generateGameCode() {
   const digits = '0123456789';
   let gameCode;

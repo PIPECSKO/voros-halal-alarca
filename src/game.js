@@ -955,6 +955,10 @@ const Game = {
   handleConnect() {
     console.log('Connected to server');
     this.playerId = this.socket.id;
+    // Make sure it's also available globally for UI
+    window.Game = window.Game || {};
+    window.Game.playerId = this.socket.id;
+    console.log('Player ID set to:', this.socket.id);
   },
   
   handleDisconnect(reason) {

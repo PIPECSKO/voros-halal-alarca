@@ -262,39 +262,74 @@ const UI = {
   // Update player list
   updatePlayerList(players) {
     try {
-      console.log('updatePlayerList', players); // DEBUG LOG
+      console.log('updatePlayerList called with:', players); // DEBUG LOG
       const playerList = document.getElementById('player-list');
-      if (!playerList) return;
+      if (!playerList) {
+        console.warn('player-list element not found');
+        return;
+      }
       
       // Clear the list
       playerList.innerHTML = '';
       
-      // Saját játékos azonosító lekérése
+      // Get our player ID - try multiple sources
       let myId = null;
       if (window.Game && window.Game.playerId) {
         myId = window.Game.playerId;
+      } else if (window.Game && window.Game.socket && window.Game.socket.id) {
+        myId = window.Game.socket.id;
       }
+      console.log('My ID for player list:', myId); // DEBUG LOG
+      
       let myReady = false;
       
-      // Add each player
+      // Add each player with improved ready status display
       players.forEach(player => {
         const li = document.createElement('li');
-        li.textContent = player.name || player.username || "Unknown Player";
+        li.style.display = 'flex';
+        li.style.justifyContent = 'space-between';
+        li.style.alignItems = 'center';
         
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = player.name || player.username || 'Játékos';
+        
+        const statusSpan = document.createElement('span');
         if (player.ready) {
+          statusSpan.textContent = '✓';
+          statusSpan.style.color = '#00ff00';
+          statusSpan.style.fontWeight = 'bold';
+          statusSpan.style.fontSize = '16px';
           li.classList.add('ready');
-          li.textContent += ' ✓';
+        } else {
+          statusSpan.textContent = '○';
+          statusSpan.style.color = '#8b0000';
+          statusSpan.style.fontSize = '14px';
         }
+        
+        // Check if this is our player
         if (myId && player.id === myId) {
           myReady = !!player.ready;
+          li.style.backgroundColor = '#2a0000'; // Highlight our own entry
         }
+        
+        li.appendChild(nameSpan);
+        li.appendChild(statusSpan);
         playerList.appendChild(li);
       });
-      // Ready gomb szövegének frissítése
+      
+      // Update ready button text based on our status
       const readyBtn = document.getElementById('ready-button');
       if (readyBtn) {
-        readyBtn.textContent = myReady ? 'Nem vagyok kész' : 'Kész vagyok';
+        if (myReady) {
+          readyBtn.textContent = 'Nem vagyok kész';
+          readyBtn.classList.add('ready');
+        } else {
+          readyBtn.textContent = 'Kész vagyok';
+          readyBtn.classList.remove('ready');
+        }
       }
+      
+      console.log('Player list updated successfully, my ready status:', myReady); // DEBUG LOG
     } catch (error) {
       console.error("Error updating player list:", error);
     }

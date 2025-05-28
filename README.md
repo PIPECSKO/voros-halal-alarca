@@ -26,7 +26,7 @@ Egy kastélyban tartott bálon a játékosok különböző szerepeket játszanak
 
 ```bash
 # Függőségek telepítése
-npm install
+   npm install
 
 # Szerver indítása
 npm start
