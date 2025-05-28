@@ -987,20 +987,18 @@ const Game = {
     console.log('Joined game with code:', gameCode);
     this.gameCode = gameCode;
     this.isHost = false;
-    this.username = document.getElementById('username-input').value.trim();
+    this.username = this.username || document.getElementById('username-input')?.value?.trim();
     
-    // Update the UI
-    UI.updateGameCode(gameCode);
-    UI.showScreen('lobby-screen');
+    // Create the SAME lobby interface as the host
+    this.createLobbyInterface(this.username, gameCode);
     
     // Hide the start button for non-hosts
-    document.getElementById('start-button').style.display = 'none';
-    
-    // Hide the join code input group
-    const joinCodeGroup = document.getElementById('join-code-group');
-    if (joinCodeGroup) {
-      joinCodeGroup.style.display = 'none';
-    }
+    setTimeout(() => {
+      const startButton = document.getElementById('start-game-button');
+      if (startButton) {
+        startButton.style.display = 'none';
+      }
+    }, 100);
   },
   
   handleUpdatePlayerList(players) {
@@ -1024,13 +1022,129 @@ const Game = {
   
   handleGameStarted() {
     console.log('Game started');
-    // Show the game screen
-    UI.showScreen('game-screen');
+    
+    // TELJES OLDAL RESET JÁTÉKRA
+    document.body.innerHTML = `
+      <style>
+        body { 
+          margin: 0; 
+          padding: 0; 
+          background: #000; 
+          overflow: hidden;
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+        }
+        #game-screen {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          z-index: 0;
+          display: flex;
+        }
+        #game-canvas {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw !important;
+          height: 100vh !important;
+          z-index: 1;
+          display: block;
+        }
+        .game-ui {
+          position: relative;
+          z-index: 10;
+        }
+        .action-buttons {
+          position: fixed;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          gap: 15px;
+          z-index: 1000;
+        }
+        .action-button {
+          background: rgba(26, 0, 0, 0.95);
+          border: 2px solid #8b0000;
+          color: #8b0000;
+          padding: 12px 16px;
+          border-radius: 0;
+          cursor: pointer;
+          font-family: 'MedievalSharp', serif;
+          font-size: 14px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 5px;
+          min-width: 80px;
+          transition: all 0.3s ease;
+          box-shadow: 0 0 10px rgba(139, 0, 0, 0.5);
+        }
+        .action-button:hover {
+          background: #8b0000;
+          color: #1a0000;
+          transform: translateY(-2px);
+          box-shadow: 0 2px 15px rgba(139, 0, 0, 0.8);
+        }
+        .action-icon {
+          font-size: 24px;
+          filter: grayscale(100%) sepia(100%) hue-rotate(320deg) saturate(200%);
+        }
+        .action-button:hover .action-icon {
+          filter: grayscale(100%) sepia(100%) hue-rotate(30deg) saturate(200%);
+        }
+        .action-text {
+          font-size: 12px;
+          text-align: center;
+          white-space: nowrap;
+        }
+      </style>
+      
+      <div id="game-screen" style="display: flex;">
+        <canvas id="game-canvas"></canvas>
+        <div class="game-ui">
+          <div class="role-display"></div>
+          <div class="timer-display"></div>
+          <div class="mini-map"></div>
+          
+          <!-- Action Buttons -->
+          <div class="action-buttons">
+            <button id="infect-button" class="action-button" style="display: none;">
+              <span class="action-icon">🦠</span>
+              <span class="action-text">Fertőz</span>
+            </button>
+            <button id="stab-button" class="action-button" style="display: none;">
+              <span class="action-icon">⚔️</span>
+              <span class="action-text">Suhint</span>
+            </button>
+            <button id="task-button" class="action-button" style="display: none;">
+              <span class="action-icon">📜</span>
+              <span class="action-text">Feladat</span>
+            </button>
+            <button id="clean-body-button" class="action-button" style="display: none;">
+              <span class="action-icon">🧹</span>
+              <span class="action-text">Takarítás</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
     
     // Initialize the game canvas and renderer
-    Map.init();
-    Player.init();
-    Animation.init();
+    this.character = window.selectedCharacter || 'male1';
+    
+    try {
+      if (typeof Map !== 'undefined') Map.init();
+      if (typeof Player !== 'undefined') Player.init();
+      if (typeof Animation !== 'undefined') Animation.init(this.character);
+    } catch (e) {
+      console.error("Error initializing game components:", e);
+    }
     
     // Start the game loop
     this.gameLoop();

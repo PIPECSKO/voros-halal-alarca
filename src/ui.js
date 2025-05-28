@@ -210,9 +210,12 @@ const UI = {
       if (screen) {
         screen.style.display = 'flex';
         this.activeScreen = screenId;
-        // Ha lobby, karakterválasztó setup
+        // Ha lobby, karakterválasztó setup - MINDEN esetben
         if (screenId === 'lobby-screen') {
-          this.setupLobbyCharacterSelection();
+          // Kis delay után setupoljuk, hogy az elemek már létezzenek
+          setTimeout(() => {
+            this.setupLobbyCharacterSelection();
+          }, 100);
         }
       } else {
         console.error(`Screen not found: ${screenId}`);
