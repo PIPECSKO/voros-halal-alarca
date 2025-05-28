@@ -237,12 +237,19 @@ io.on('connection', (socket) => {
       return;
     }
 
+    // Mark game as started
+    games[gameCode].started = true;
+    
     // Initialize game state
     initializeGame(gameCode);
-    io.to(gameCode).emit('gameStarted');
     
-    // Start the first round
-    startRound(gameCode);
+    // Notify ALL players that the game has started
+    console.log(`Starting game ${gameCode} for ${playerCount} players`);
+    io.to(gameCode).emit('gameStarted', {
+      gameCode: gameCode,
+      players: games[gameCode].players,
+      roles: games[gameCode].roles
+    });
   });
 
   // Handle player movement
