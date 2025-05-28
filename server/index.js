@@ -47,12 +47,12 @@ io.use((socket, next) => {
   next();
 });
 
-// Serve static files from the client directory
-app.use(express.static(path.join(__dirname, '../client')));
+// Serve static files from the root directory (where files are currently located)
+app.use(express.static(path.join(__dirname, '../')));
 
-// Root route serves the index.html
+// Root route serves the index.html from root directory
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/index.html'));
+  res.sendFile(path.join(__dirname, '../index.html'));
 });
 
 // Add a route for testing connection
@@ -62,7 +62,7 @@ app.get('/ping', (req, res) => {
 
 // Add a route for the connection test page
 app.get('/connection-test', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/connection_test.html'));
+  res.sendFile(path.join(__dirname, '../test_join.html'));
 });
 
 // Handle socket connections
