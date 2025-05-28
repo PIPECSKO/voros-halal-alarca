@@ -263,14 +263,14 @@ const UI = {
   updatePlayerList(players) {
     try {
       console.log('updatePlayerList called with:', players); // DEBUG LOG
-      const playerList = document.getElementById('player-list');
-      if (!playerList) {
+      const playerListElement = document.getElementById('player-list');
+      if (!playerListElement) {
         console.warn('player-list element not found');
         return;
       }
       
       // Clear the list
-      playerList.innerHTML = '';
+      playerListElement.innerHTML = '';
       
       // Get our player ID - try multiple sources
       let myId = null;
@@ -282,9 +282,12 @@ const UI = {
       console.log('My ID for player list:', myId); // DEBUG LOG
       
       let myReady = false;
+      let playerCount = 0;
+      let readyCount = 0;
       
       // Add each player with improved ready status display
       players.forEach(player => {
+        playerCount++;
         const li = document.createElement('li');
         li.style.display = 'flex';
         li.style.justifyContent = 'space-between';
@@ -295,6 +298,7 @@ const UI = {
         
         const statusSpan = document.createElement('span');
         if (player.ready) {
+          readyCount++;
           statusSpan.textContent = '✓';
           statusSpan.style.color = '#00ff00';
           statusSpan.style.fontWeight = 'bold';
@@ -314,7 +318,7 @@ const UI = {
         
         li.appendChild(nameSpan);
         li.appendChild(statusSpan);
-        playerList.appendChild(li);
+        playerListElement.appendChild(li);
       });
       
       // Update ready button text based on our status
@@ -329,7 +333,15 @@ const UI = {
         }
       }
       
-      console.log('Player list updated successfully, my ready status:', myReady); // DEBUG LOG
+      // Update start button status if we're the host
+      const startBtn = document.getElementById('start-game-button');
+      if (startBtn && window.Game && window.Game.isHost) {
+        const allReady = readyCount === playerCount && playerCount > 0;
+        startBtn.disabled = !allReady;
+        startBtn.textContent = allReady ? 'Játék indítása' : 'Játék indítása (várj hogy mindenki kész legyen)';
+      }
+      
+      console.log(`Player list updated: ${readyCount}/${playerCount} ready, my ready status:`, myReady); // DEBUG LOG
     } catch (error) {
       console.error("Error updating player list:", error);
     }

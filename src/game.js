@@ -537,6 +537,13 @@ const Game = {
       
       // Ready button functionality
       window.toggleReady = function() {
+        // If we're connected to server, use socket event
+        if (SocketConnector.isSocketConnected()) {
+          SocketConnector.emit('toggleReady');
+          return;
+        }
+        
+        // Offline mode - just toggle button appearance
         window.isReady = !window.isReady;
         const readyBtn = document.getElementById('ready-button');
         const startBtn = document.getElementById('start-game-button');
@@ -544,16 +551,13 @@ const Game = {
         if (window.isReady) {
           readyBtn.textContent = 'Nem vagyok kész';
           readyBtn.classList.add('ready');
-      } else {
+        } else {
           readyBtn.textContent = 'Kész vagyok';
           readyBtn.classList.remove('ready');
         }
         
-        // Update player list to show ready status
-        const currentPlayers = [
-          { name: username, ready: window.isReady }
-        ];
-        window.updatePlayerList(currentPlayers);
+        // DON'T override the player list in offline mode - server will handle it
+        // The server will send updatePlayerList event with the full list
         
         // For offline testing, simulate all players ready when host is ready
         if (window.isReady) {
