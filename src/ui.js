@@ -138,6 +138,20 @@ const UI = {
         }
       });
       
+      // Ready button
+      this.addClickHandler('ready-button', () => {
+        if (Game.socket && Game.socket.connected) {
+          Game.socket.emit('toggleReady');
+        } else {
+          // Offline mode - just toggle the button text
+          const readyBtn = document.getElementById('ready-button');
+          if (readyBtn) {
+            const isReady = readyBtn.textContent.includes('Nem vagyok kész');
+            readyBtn.textContent = isReady ? 'Kész vagyok' : 'Nem vagyok kész';
+          }
+        }
+      });
+      
       // Game action buttons
       this.addClickHandler('task-button', this.handleTaskAction);
       this.addClickHandler('clean-body-button', this.handleCleanBodyAction);
@@ -517,16 +531,16 @@ const UI = {
     // Elérhető karakterek
     const characters = {
       male: [
-        { key: 'male1', img: 'assets/images/characters/male1/idle/male1_idle_facing_right1.png' },
-        { key: 'male2', img: 'assets/images/characters/male2/idle/male2_idle_facing_right1.png' },
-        { key: 'male3', img: 'assets/images/characters/male3/idle/male3_idle_facing_right1.png' },
-        { key: 'male4', img: 'assets/images/characters/male4/idle/male4_idle_facing_right1.png' }
+        { key: 'male1', img: 'assets/images/characters/males/male1/idle/male1_idle_facing_right1.png' },
+        { key: 'male2', img: 'assets/images/characters/males/male2/idle/male2_idle_facing_right1.png' },
+        { key: 'male3', img: 'assets/images/characters/males/male3/idle/male3_idle_facing_right1.png' },
+        { key: 'male4', img: 'assets/images/characters/males/male4/idle/male4_idle_facing_right1.png' }
       ],
       female: [
-        { key: 'female1', img: 'assets/images/characters/female1/idle/female1_idle_facing_right1.png' },
-        { key: 'female2', img: 'assets/images/characters/female2/idle/female2_idle_facing_right1.png' },
-        { key: 'female3', img: 'assets/images/characters/female3/idle/female3_idle_facing_right1.png' },
-        { key: 'female4', img: 'assets/images/characters/female4/idle/female4_idle_facing_right1.png' }
+        { key: 'female1', img: 'assets/images/characters/females/female1/idle/female1_idle_facing_right1.png' },
+        { key: 'female2', img: 'assets/images/characters/females/female2/idle/female2_idle_facing_right1.png' },
+        { key: 'female3', img: 'assets/images/characters/females/female3/idle/female3_idle_facing_right1.png' },
+        { key: 'female4', img: 'assets/images/characters/females/female4/idle/female4_idle_facing_right1.png' }
       ]
     };
     // Alapértelmezett: egyik sem kiválasztva

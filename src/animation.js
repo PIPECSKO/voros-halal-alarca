@@ -26,15 +26,18 @@ const Animation = {
   
   // Load animation frames
   loadFrames() {
+    // Determine gender folder based on character name
+    const genderFolder = this.character.startsWith('female') ? 'females' : 'males';
+    
     // Idle frames
     this.frames.idle.left = [];
     this.frames.idle.right = [];
     for (let i = 1; i <= this.idleFrameCount; i++) {
       const imgL = new Image();
-      imgL.src = `assets/images/characters/${this.character}/idle/${this.character}_idle_facing_left${i}.png`;
+      imgL.src = `assets/images/characters/${genderFolder}/${this.character}/idle/${this.character}_idle_facing_left${i}.png`;
       this.frames.idle.left.push(imgL);
       const imgR = new Image();
-      imgR.src = `assets/images/characters/${this.character}/idle/${this.character}_idle_facing_right${i}.png`;
+      imgR.src = `assets/images/characters/${genderFolder}/${this.character}/idle/${this.character}_idle_facing_right${i}.png`;
       this.frames.idle.right.push(imgR);
     }
     
@@ -43,10 +46,10 @@ const Animation = {
     this.frames.walk.right = [];
     for (let i = 1; i <= this.walkFrameCount; i++) {
       const imgL = new Image();
-      imgL.src = `assets/images/characters/${this.character}/walk/${this.character}_walk_facing_left${i}.png`;
+      imgL.src = `assets/images/characters/${genderFolder}/${this.character}/walk/${this.character}_walk_facing_left${i}.png`;
       this.frames.walk.left.push(imgL);
       const imgR = new Image();
-      imgR.src = `assets/images/characters/${this.character}/walk/${this.character}_walk_facing_right${i}.png`;
+      imgR.src = `assets/images/characters/${genderFolder}/${this.character}/walk/${this.character}_walk_facing_right${i}.png`;
       this.frames.walk.right.push(imgR);
     }
   },
@@ -125,16 +128,24 @@ const Animation = {
     // Background szín meghatározása
     let backgroundColor, frameColor;
     
-    if (playerRole === 'prince') {
+    // Pestis karakterek álcázása: úgy nézzenek ki mint a normális szerepük
+    let displayRole = playerRole;
+    if (playerRole === 'plague-noble') {
+      displayRole = 'noble'; // Pestis-nemes úgy néz ki mint normális nemes
+    } else if (playerRole === 'plague-commoner' || playerRole === 'plague') {
+      displayRole = 'commoner'; // Pestis-polgár úgy néz ki mint normális polgár
+    }
+    
+    if (displayRole === 'prince') {
       // Herceg: teljes arany (háttér + frame)
       backgroundColor = '#FFD700'; // arany
       frameColor = '#FFD700'; // arany frame
-    } else if (playerRole === 'noble') {
-      // Nemes: csoport szín háttér + ARANY frame
+    } else if (displayRole === 'noble') {
+      // Nemes (beleértve a pestis-nemest is): csoport szín háttér + ARANY frame
       backgroundColor = groupColors[groupColor] || '#444444';
       frameColor = '#FFD700'; // arany frame
     } else {
-      // Polgár: csoport szín háttér + FEKETE frame (új logika!)
+      // Polgár (beleértve a pestis-polgárt is): csoport szín háttér + FEKETE frame
       backgroundColor = groupColors[groupColor] || '#444444';
       frameColor = '#333333'; // fekete frame
     }
@@ -149,7 +160,7 @@ const Animation = {
     
     // Szöveg szín meghatározása (kontraszt alapján)
     let textColor;
-    if (playerRole === 'prince') {
+    if (displayRole === 'prince') {
       textColor = '#000000'; // fekete szöveg arany háttéren
     } else if (backgroundColor === '#F5F5F5') {
       // Fehér háttér esetén fekete szöveg

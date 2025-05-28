@@ -130,7 +130,7 @@ const Game = {
           
         if (SocketConnector.isSocketConnected()) {
             // Use socket to create game and wait for server response
-            SocketConnector.emit('createGame', { username });
+            SocketConnector.emit('hostGame', username);
         } else {
             // Offline mode - use random code
             const randomCode = Math.floor(Math.random() * 90000 + 10000).toString();
@@ -608,7 +608,8 @@ const Game = {
         
         characters[gender].forEach(char => {
           const img = document.createElement('img');
-          img.src = 'assets/images/characters/' + char + '/idle/' + char + '_idle_facing_right1.png';
+          const genderFolder = gender === 'male' ? 'males' : 'females';
+          img.src = 'assets/images/characters/' + genderFolder + '/' + char + '/idle/' + char + '_idle_facing_right1.png';
           img.onerror = () => {
             console.log('Character image not found:', img.src);
             img.style.display = 'none';

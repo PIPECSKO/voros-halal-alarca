@@ -6,7 +6,8 @@ const Map = {
   
   // Room background images
   roomImages: {
-    blue: null // A kék szoba képe
+    blue: null, // A kék szoba képe
+    red: null   // A piros szoba képe
   },
   
   // Camera system
@@ -62,6 +63,17 @@ const Map = {
     };
     this.roomImages.blue.onerror = () => {
       console.error('Failed to load blue room image');
+    };
+    
+    this.roomImages.red = new Image();
+    this.roomImages.red.src = 'assets/images/map/red_room.png';
+    this.roomImages.red.onload = () => {
+      console.log('Red room image loaded');
+      console.log('Red room image size:', this.roomImages.red.width + 'x' + this.roomImages.red.height);
+      console.log('Room size should be:', this.roomWidth + 'x' + this.roomHeight);
+    };
+    this.roomImages.red.onerror = () => {
+      console.error('Failed to load red room image');
     };
     
     // Start in black room (index 0)
@@ -161,11 +173,14 @@ const Map = {
       const roomX = index * this.roomWidth;
       const roomY = 0;
       
-      // Special handling for blue room (index 6)
+      // Special handling for rooms with PNG backgrounds
       if (room.id === 'blue' && this.roomImages.blue && this.roomImages.blue.complete) {
         // Draw the PNG background for blue room
         this.ctx.drawImage(this.roomImages.blue, roomX, roomY, this.roomWidth, this.roomHeight);
-    } else {
+      } else if (room.id === 'red' && this.roomImages.red && this.roomImages.red.complete) {
+        // Draw the PNG background for red room
+        this.ctx.drawImage(this.roomImages.red, roomX, roomY, this.roomWidth, this.roomHeight);
+      } else {
         // Regular room background for other rooms
         this.ctx.fillStyle = room.color;
         this.ctx.fillRect(roomX, roomY, this.roomWidth, this.roomHeight);
