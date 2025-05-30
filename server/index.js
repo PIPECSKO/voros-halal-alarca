@@ -26,15 +26,20 @@ const io = socketIO(server, {
     allowedHeaders: ['Content-Type'],
     credentials: false
   },
-  connectTimeout: 15000,
-  pingTimeout: 10000,
-  pingInterval: 3000,
+  connectTimeout: 30000,
+  pingTimeout: 20000,
+  pingInterval: 5000,
+  upgradeTimeout: 20000,
   transports: ['websocket', 'polling'],
   allowUpgrades: true,
   perMessageDeflate: {
-    threshold: 1024
+    threshold: 512
   },
-  maxHttpBufferSize: 1e6
+  maxHttpBufferSize: 5e5,
+  compression: true,
+  httpCompression: true,
+  cookie: false,
+  serveClient: false
 });
 
 // Debug middleware for socket.io connections
@@ -369,12 +374,19 @@ io.on('connection', (socket) => {
 
   // Add a heartbeat mechanism to detect disconnections more quickly
   const heartbeatInterval = setInterval(() => {
-    socket.emit('heartbeat');
-  }, 10000); // 10 seconds
+    socket.emit('heartbeat', { serverTime: new Date().toISOString() });
+  }, 15000); // 10000 -> 15000 (ritkább heartbeat nagy késleltetés esetén)
   
-  socket.on('heartbeat_response', () => {
+  socket.on('heartbeat_response', (data) => {
     // Client is still connected and responsive
     socket.lastHeartbeat = new Date();
+    
+    // Calculate latency if client sent timestamp
+    if (data && data.clientTime) {
+      const latency = Date.now() - data.clientTime;
+      socket.latency = latency;
+      console.log(`Client ${socket.id} latency: ${latency}ms`);
+    }
   });
   
   // Disconnect handler

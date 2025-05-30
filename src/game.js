@@ -134,6 +134,7 @@ const Game = {
         } else {
             // Offline mode - use random code
             const randomCode = Math.floor(Math.random() * 90000 + 10000).toString();
+            this.isHost = true; // Set host status for offline mode
             this.createLobbyInterface(username, randomCode);
         }
       } else {
@@ -482,6 +483,17 @@ const Game = {
       window.allPlayersReady = false;
       window.currentGameCode = gameCode;
       
+      // Set up global Game object reference for UI
+      if (this && typeof this === 'object') {
+        window.Game = this;
+        window.Game.isHost = true; // Default to host in offline/lobby creation
+      }
+      
+      // Make UI globally accessible if available
+      if (typeof UI !== 'undefined') {
+        window.UI = UI;
+      }
+      
       // Update room code display
       window.updateRoomCode = function(gameCode) {
         window.currentGameCode = gameCode;
@@ -494,12 +506,25 @@ const Game = {
       
       // Update player list with ready status
       window.updatePlayerList = function(players) {
+        console.log('DEBUG: Local updatePlayerList called with:', players);
         const playerListElement = document.getElementById('player-list');
         if (!playerListElement) return;
         
         playerListElement.innerHTML = '';
         
+        // Get our player ID to check if we're ready
+        let myId = null;
+        if (window.Game && window.Game.playerId) {
+          myId = window.Game.playerId;
+        }
+        console.log('DEBUG: My player ID:', myId);
+        
+        let myReady = false;
+        let playerCount = 0;
+        let readyCount = 0;
+        
         players.forEach(player => {
+          playerCount++;
           const li = document.createElement('li');
           li.style.display = 'flex';
           li.style.justifyContent = 'space-between';
@@ -510,20 +535,57 @@ const Game = {
           
           const statusSpan = document.createElement('span');
           if (player.ready) {
+            readyCount++;
             statusSpan.textContent = '✓';
             statusSpan.style.color = '#00ff00';
             statusSpan.style.fontWeight = 'bold';
             statusSpan.style.fontSize = '16px';
-      } else {
+            li.classList.add('ready');
+          } else {
             statusSpan.textContent = '○';
             statusSpan.style.color = '#8b0000';
             statusSpan.style.fontSize = '14px';
+          }
+          
+          // Check if this is our player
+          if (myId && player.id === myId) {
+            myReady = !!player.ready;
+            li.style.backgroundColor = '#2a0000'; // Highlight our own entry
           }
           
           li.appendChild(nameSpan);
           li.appendChild(statusSpan);
           playerListElement.appendChild(li);
         });
+        
+        console.log('DEBUG: Player counts - ready:', readyCount, 'total:', playerCount);
+        console.log('DEBUG: My ready status:', myReady);
+        
+        // Update ready button text based on our status
+        const readyBtn = document.getElementById('ready-button');
+        if (readyBtn) {
+          if (myReady) {
+            readyBtn.textContent = 'Nem vagyok kész';
+            readyBtn.classList.add('ready');
+          } else {
+            readyBtn.textContent = 'Kész vagyok';
+            readyBtn.classList.remove('ready');
+          }
+        }
+        
+        // Update start button status if we're the host
+        const startBtn = document.getElementById('start-game-button');
+        if (startBtn && window.Game && window.Game.isHost) {
+          const allReady = readyCount === playerCount && playerCount > 0;
+          console.log('DEBUG: All ready check:', allReady, '(', readyCount, '/', playerCount, ')');
+          
+          startBtn.disabled = !allReady;
+          startBtn.textContent = allReady ? 'Játék indítása' : 'Játék indítása (várj hogy mindenki kész legyen)';
+          
+          // Also update global flag for startGame function
+          window.allPlayersReady = allReady;
+          console.log('DEBUG: Start button updated - disabled:', !allReady, 'allPlayersReady:', allReady);
+        }
       };
       
       // Set initial room code
@@ -537,16 +599,22 @@ const Game = {
       
       // Ready button functionality
       window.toggleReady = function() {
+        console.log('DEBUG: toggleReady called, SocketConnector.isSocketConnected():', SocketConnector.isSocketConnected());
+        
         // If we're connected to server, use socket event
         if (SocketConnector.isSocketConnected()) {
+          console.log('DEBUG: Using server mode, emitting toggleReady');
           SocketConnector.emit('toggleReady');
           return;
         }
         
-        // Offline mode - just toggle button appearance
+        console.log('DEBUG: Using offline mode');
+        // Offline mode - toggle our ready status
         window.isReady = !window.isReady;
+        console.log('DEBUG: window.isReady toggled to:', window.isReady);
+        
         const readyBtn = document.getElementById('ready-button');
-        const startBtn = document.getElementById('start-game-button');
+        console.log('DEBUG: readyBtn found:', !!readyBtn);
         
         if (window.isReady) {
           readyBtn.textContent = 'Nem vagyok kész';
@@ -556,19 +624,42 @@ const Game = {
           readyBtn.classList.remove('ready');
         }
         
-        // DON'T override the player list in offline mode - server will handle it
-        // The server will send updatePlayerList event with the full list
+        // Update the player list to trigger start button logic
+        const currentPlayers = [
+          { name: username, ready: window.isReady, id: 'offline-player-1' }
+        ];
+        console.log('DEBUG: currentPlayers:', currentPlayers);
         
-        // For offline testing, simulate all players ready when host is ready
-        if (window.isReady) {
-          window.allPlayersReady = true;
-          startBtn.disabled = false;
-          startBtn.textContent = 'Játék indítása';
+        // Call the UI.js updatePlayerList function if available
+        if (window.UI && window.UI.updatePlayerList) {
+          console.log('DEBUG: Using window.UI.updatePlayerList');
+          window.UI.updatePlayerList(currentPlayers);
         } else {
-          window.allPlayersReady = false;
-          startBtn.disabled = true;
-          startBtn.textContent = 'Játék indítása (várj hogy mindenki kész legyen)';
+          console.log('DEBUG: Using fallback local updatePlayerList');
+          // Fallback to local updatePlayerList
+          window.updatePlayerList(currentPlayers);
+          
+          // Manually update start button for offline mode
+          const startBtn = document.getElementById('start-game-button');
+          console.log('DEBUG: startBtn found:', !!startBtn);
+          console.log('DEBUG: startBtn disabled before:', startBtn ? startBtn.disabled : 'N/A');
+          
+          if (startBtn) {
+            if (window.isReady) {
+              startBtn.disabled = false;
+              startBtn.textContent = 'Játék indítása';
+              console.log('DEBUG: Start button ENABLED');
+            } else {
+              startBtn.disabled = true;
+              startBtn.textContent = 'Játék indítása (várj hogy mindenki kész legyen)';
+              console.log('DEBUG: Start button DISABLED');
+            }
+            console.log('DEBUG: startBtn disabled after:', startBtn.disabled);
+          }
         }
+        
+        window.allPlayersReady = window.isReady;
+        console.log('DEBUG: window.allPlayersReady set to:', window.allPlayersReady);
       };
       
       // Add ready button event listener
@@ -604,8 +695,8 @@ const Game = {
         gallery.innerHTML = '';
         
         const characters = {
-          male: ['male1', 'male2', 'male3', 'male4'],
-          female: ['female1', 'female2', 'female3', 'female4']
+          male: ['male1', 'male2', 'male3', 'male4', 'male5', 'male6'],
+          female: ['female1', 'female2', 'female3', 'female4', 'female5', 'female6']
         };
         
         if (!characters[gender]) return;
@@ -633,11 +724,16 @@ const Game = {
       };
       
       window.startGame = function() {
+        console.log('DEBUG: startGame called');
+        console.log('DEBUG: window.allPlayersReady:', window.allPlayersReady);
+        
         if (!window.allPlayersReady) {
+          console.log('DEBUG: Not all players ready, showing alert');
           alert('Várj, amíg minden játékos készen áll!');
           return;
         }
         
+        console.log('DEBUG: All players ready, starting game');
         try {
           console.log('Starting game with character:', window.selectedCharacter || 'male1');
           
@@ -800,7 +896,7 @@ const Game = {
                   roleText = 'Pestis-Nemes';
                 } else if (role === 'plague-commoner') {
                   roleText = 'Pestis-Polgár';
-      } else {
+                } else {
                   roleText = role || 'Ismeretlen';
                 }
                 
@@ -1346,7 +1442,14 @@ const Game = {
     } else if (window.Map && window.Map.draw) {
       window.Map.draw();
     }
-    // Draw the player (Map már alkalmazza a kamera transform-ot)
+    
+    // Draw other players first (so they appear behind our player)
+    this.drawPlayers();
+    
+    // Draw bodies
+    this.drawBodies();
+    
+    // Draw our player last (so it's on top)
     if (window.Player && window.Player.draw) window.Player.draw();
   },
   
@@ -1599,9 +1702,26 @@ const Game = {
     }
   },
   
-  // Send position update to server
+  // Send position update to server (optimalizált nagy késleltetéshez)
   sendPositionUpdate() {
     if (!this.socket || !SocketConnector.isSocketConnected()) return;
+    
+    const now = Date.now();
+    
+    // Throttle position updates for high-latency connections (200ms helyett 500ms)
+    if (this.lastPositionUpdate && now - this.lastPositionUpdate < 500) {
+      return;
+    }
+    
+    // Only send if position changed significantly (10px helyett 15px threshold)
+    if (this.lastSentPosition) {
+      const deltaX = Math.abs(this.position.x - this.lastSentPosition.x);
+      const deltaY = Math.abs(this.position.y - this.lastSentPosition.y);
+      
+      if (deltaX < 15 && deltaY < 15 && this.lastSentMoving === Player.isMoving) {
+        return; // Not enough change to warrant an update
+      }
+    }
     
     // Send player position, direction and movement state to server
     SocketConnector.emit('playerMove', {
@@ -1609,6 +1729,11 @@ const Game = {
       direction: Player.direction,
       isMoving: Player.isMoving
     });
+    
+    // Update tracking variables
+    this.lastPositionUpdate = now;
+    this.lastSentPosition = { x: this.position.x, y: this.position.y };
+    this.lastSentMoving = Player.isMoving;
   }
 }; 
 

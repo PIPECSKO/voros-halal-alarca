@@ -7,7 +7,9 @@ const Map = {
   // Room background images
   roomImages: {
     blue: null, // A kék szoba képe
-    red: null   // A piros szoba képe
+    red: null,  // A piros szoba képe
+    orange: null, // A narancssárga szoba képe
+    green: null   // A zöld szoba képe
   },
   
   // Camera system
@@ -74,6 +76,28 @@ const Map = {
     };
     this.roomImages.red.onerror = () => {
       console.error('Failed to load red room image');
+    };
+    
+    this.roomImages.orange = new Image();
+    this.roomImages.orange.src = 'assets/images/map/orange_room.png';
+    this.roomImages.orange.onload = () => {
+      console.log('Orange room image loaded');
+      console.log('Orange room image size:', this.roomImages.orange.width + 'x' + this.roomImages.orange.height);
+      console.log('Room size should be:', this.roomWidth + 'x' + this.roomHeight);
+    };
+    this.roomImages.orange.onerror = () => {
+      console.error('Failed to load orange room image');
+    };
+    
+    this.roomImages.green = new Image();
+    this.roomImages.green.src = 'assets/images/map/green_room.png';
+    this.roomImages.green.onload = () => {
+      console.log('Green room image loaded');
+      console.log('Green room image size:', this.roomImages.green.width + 'x' + this.roomImages.green.height);
+      console.log('Room size should be:', this.roomWidth + 'x' + this.roomHeight);
+    };
+    this.roomImages.green.onerror = () => {
+      console.error('Failed to load green room image');
     };
     
     // Start in black room (index 0)
@@ -180,6 +204,12 @@ const Map = {
       } else if (room.id === 'red' && this.roomImages.red && this.roomImages.red.complete) {
         // Draw the PNG background for red room
         this.ctx.drawImage(this.roomImages.red, roomX, roomY, this.roomWidth, this.roomHeight);
+      } else if (room.id === 'orange' && this.roomImages.orange && this.roomImages.orange.complete) {
+        // Draw the PNG background for orange room
+        this.ctx.drawImage(this.roomImages.orange, roomX, roomY, this.roomWidth, this.roomHeight);
+      } else if (room.id === 'green' && this.roomImages.green && this.roomImages.green.complete) {
+        // Draw the PNG background for green room
+        this.ctx.drawImage(this.roomImages.green, roomX, roomY, this.roomWidth, this.roomHeight);
       } else {
         // Regular room background for other rooms
         this.ctx.fillStyle = room.color;
@@ -299,6 +329,13 @@ const Map = {
     
     // Reset text alignment
     this.ctx.textAlign = 'left';
+  },
+  
+  // Get room ID from world position
+  getRoomFromPosition(position) {
+    const roomIndex = Math.floor(position.x / this.roomWidth);
+    const clampedIndex = Math.max(0, Math.min(this.rooms.length - 1, roomIndex));
+    return this.rooms[clampedIndex].id;
   },
   
   // Get world position from screen position

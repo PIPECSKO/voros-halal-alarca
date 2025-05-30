@@ -1,4 +1,5 @@
 import Animation from './animation.js';
+import Audio from './audio.js';
 
 // Player Handler
 
@@ -10,6 +11,7 @@ const Player = {
   animationFrame: 0,
   animationTimer: 0,
   speed: 5, // mozgás sebessége (kicsit gyorsabb az nagyobb szobákhoz)
+  previousAnimationFrame: 0, // For footstep sound timing
 
   // Segédfüggvény a padló pozíció kiszámításához
   getFloorY() {
@@ -95,9 +97,18 @@ const Player = {
   updateAnimation() {
     if (this.isMoving) {
       this.animationTimer++;
-      if (this.animationTimer > 12) { // lassabb walk animáció
+      if (this.animationTimer > 10) { // gyorsabb walk animáció a hangokhoz
+        const previousFrame = this.animationFrame;
         this.animationFrame = (this.animationFrame + 1) % 9; // 9 frame-es walk animáció
         this.animationTimer = 0;
+        
+        // Play footstep sound on specific frames (when foot touches ground)
+        // Play on frames 1 and 4 for faster rhythm (3 frames apart)
+        if (this.animationFrame === 1 || this.animationFrame === 4) {
+          if (window.Audio && window.Audio.playFootstep) {
+            window.Audio.playFootstep();
+          }
+        }
       }
     } else {
       this.animationTimer++;
@@ -122,6 +133,70 @@ const Player = {
       direction: this.direction,
       animationFrame: this.animationFrame
     });
+  },
+  
+  // Draw other player (for multiplayer mode)
+  drawOtherPlayer(player) {
+    // Convert world position to screen position for drawing
+    const screenPos = window.Map && window.Map.worldToScreen ? 
+      window.Map.worldToScreen(player.x, player.y) : 
+      { x: player.x, y: player.y };
+    
+    // Store current character to restore later
+    const originalCharacter = Animation.character;
+    
+    // Set character for this player
+    Animation.character = player.character || 'male1';
+    
+    // Draw the other player using Animation module
+    Animation.drawCharacter({
+      x: screenPos.x,
+      y: screenPos.y,
+      isMoving: player.isMoving || false,
+      direction: player.direction || 'right',
+      animationFrame: player.animationFrame || 0
+    });
+    
+    // Restore original character
+    Animation.character = originalCharacter;
+  },
+  
+  // Draw dead body
+  drawBody(body) {
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Convert world position to screen position for drawing
+    const screenPos = window.Map && window.Map.worldToScreen ? 
+      window.Map.worldToScreen(body.position.x, body.position.y) : 
+      { x: body.position.x, y: body.position.y };
+    
+    // Apply camera transform if using camera system
+    const usingCameraSystem = window.Map && window.Map.camera;
+    if (usingCameraSystem) {
+      ctx.save();
+      ctx.translate(-window.Map.camera.x, -window.Map.camera.y);
+    }
+    
+    // Draw a simple body representation (red circle)
+    ctx.fillStyle = '#8b0000';
+    ctx.beginPath();
+    ctx.arc(screenPos.x, screenPos.y, 20, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    // Draw timer indicator
+    const timeRemaining = Math.max(0, body.timeToCleanup - (Date.now() - body.timeOfDeath));
+    const progress = timeRemaining / body.timeToCleanup;
+    
+    ctx.strokeStyle = progress > 0.3 ? '#ffff00' : '#ff0000';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(screenPos.x, screenPos.y, 25, 0, 2 * Math.PI * progress);
+    ctx.stroke();
+    
+    if (usingCameraSystem) {
+      ctx.restore();
+    }
   }
 }; 
 

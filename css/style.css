@@ -1,0 +1,42 @@
+/* Connection status styles */
+.status-connected {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.status-slow {
+  color: #FF9800;
+  font-weight: bold;
+}
+
+.status-disconnected {
+  color: #F44336;
+  font-weight: bold;
+}
+
+.status-connecting {
+  color: #2196F3;
+  font-weight: bold;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Optimalizált animációk lassú kapcsolatra */
+.slow-connection {
+  animation-duration: 2s !important;
+  transition-duration: 0.5s !important;
+}
+
+/* Csökkentett mozgás hatások */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+} 

@@ -80,19 +80,42 @@ const SocketConnector = {
       // Initialize socket with robust configuration
       this.socket = io(serverUrl, {
         reconnectionAttempts: this.maxReconnectAttempts,
-        reconnectionDelay: 1000,
-        reconnectionDelayMax: 5000,
-        timeout: 20000,
+        reconnectionDelay: 2000,        // 1000 -> 2000 (lassabb újracsatlakozás)
+        reconnectionDelayMax: 10000,    // 5000 -> 10000 (nagyobb max delay)
+        timeout: 30000,                 // 20000 -> 30000 (több idő a kapcsolatra)
         // Try WebSocket first, then fall back to polling
-        transports: ['websocket', 'polling']
+        transports: ['websocket', 'polling'],
+        // Új optimalizációk nagy késleltetéshez
+        upgrade: true,
+        upgradeTimeout: 20000,
+        forceNew: false,
+        multiplex: true
       });
       
       // Setup listeners
       this.setupEventListeners();
       
-      // Set up heartbeat response
-      this.socket.on('heartbeat', () => {
-        this.socket.emit('heartbeat_response');
+      // Set up heartbeat response with latency measurement
+      this.socket.on('heartbeat', (data) => {
+        const clientTime = Date.now();
+        this.socket.emit('heartbeat_response', { 
+          clientTime: clientTime,
+          serverTime: data ? data.serverTime : null
+        });
+        
+        // Calculate and display latency if we have server time
+        if (data && data.serverTime) {
+          const serverTime = new Date(data.serverTime).getTime();
+          const latency = Math.abs(clientTime - serverTime);
+          this.lastLatency = latency;
+          
+          // Update UI with latency info
+          const statusEl = document.getElementById('connection-status');
+          if (statusEl && this.isConnected) {
+            statusEl.textContent = `Kapcsolódva (${latency}ms ping)`;
+            statusEl.className = latency > 200 ? 'status-slow' : 'status-connected';
+          }
+        }
       });
       
       // Check connection acknowledgment 

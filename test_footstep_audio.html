@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lépéshang Teszt - Footstep Audio Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(45deg, #1a1a1a, #2d0000);
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .test-buttons {
+            margin: 20px 0;
+        }
+        button {
+            background: linear-gradient(45deg, #8b0000, #cc0000);
+            color: #ffffff;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: linear-gradient(45deg, #cc0000, #ff0000);
+            transform: translateY(-2px);
+        }
+        #canvas {
+            border: 2px solid #8b0000;
+            background: #000000;
+            margin: 20px 0;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(139, 0, 0, 0.3);
+            border-radius: 5px;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        .info {
+            text-align: left;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Lépéshang Teszt</h1>
+        <p>Tesztelje a játék lépéshang rendszerét!</p>
+        
+        <div class="info">
+            <h3>Instrukciók:</h3>
+            <ul>
+                <li><strong>A/D vagy nyílbillentyűk:</strong> Karakter mozgatása</li>
+                <li><strong>Lépéshangok:</strong> Automatikusan lejátszódnak az 1. és 4. animációs frame-nél</li>
+                <li><strong>Felváltás:</strong> step1.mp3 → step2.mp3 → step1.mp3...</li>
+            </ul>
+        </div>
+        
+        <div class="test-buttons">
+            <button id="play-step1">🎵 Step1 lejátszása</button>
+            <button id="play-step2">🎵 Step2 lejátszása</button>
+            <button id="play-footstep">👟 Automatikus lépéshang</button>
+        </div>
+        
+        <div class="status" id="status">
+            Állapot: Betöltés...
+        </div>
+        
+        <canvas id="canvas" width="600" height="400"></canvas>
+        
+        <div class="controls">
+            <p><strong>Mozgás:</strong> A/D billentyűk vagy ← → nyilak</p>
+            <p><strong>Hangerő:</strong> 30% (optimalizált)</p>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import audio module (simplified for testing)
+        const Audio = {
+            sounds: {},
+            currentFootstepIndex: 0,
+            
+            init() {
+                console.log("Audio.init started");
+                this.loadSounds();
+                this.updateStatus("Audio rendszer inicializálva");
+            },
+            
+            loadSounds() {
+                try {
+                    this.sounds.step1 = new window.Audio('assets/sounds/step1.mp3');
+                    this.sounds.step2 = new window.Audio('assets/sounds/step2.mp3');
+                    
+                    this.sounds.step1.volume = 0.3;
+                    this.sounds.step2.volume = 0.3;
+                    
+                    this.sounds.step1.preload = 'auto';
+                    this.sounds.step2.preload = 'auto';
+                    
+                    console.log("Audio sounds loaded");
+                    this.updateStatus("Hangfájlok betöltve (step1.mp3, step2.mp3)");
+                } catch (error) {
+                    console.error("Error loading sounds:", error);
+                    this.updateStatus("❌ Hiba a hangfájlok betöltésekor: " + error.message);
+                }
+            },
+            
+            playFootstep() {
+                try {
+                    const stepSound = this.currentFootstepIndex === 0 ? this.sounds.step1 : this.sounds.step2;
+                    const soundName = this.currentFootstepIndex === 0 ? 'step1' : 'step2';
+                    
+                    stepSound.currentTime = 0;
+                    stepSound.play().then(() => {
+                        this.updateStatus(`🎵 Lejátszva: ${soundName}.mp3`);
+                    }).catch(err => {
+                        this.updateStatus("❌ Lejátszás sikertelen (felhasználói interakció szükséges): " + err.message);
+                    });
+                    
+                    this.currentFootstepIndex = (this.currentFootstepIndex + 1) % 2;
+                } catch (error) {
+                    console.warn("Footstep sound play error:", error);
+                    this.updateStatus("❌ Lépéshang lejátszási hiba: " + error.message);
+                }
+            },
+            
+            playSound(soundName) {
+                try {
+                    if (this.sounds[soundName]) {
+                        this.sounds[soundName].currentTime = 0;
+                        this.sounds[soundName].play().then(() => {
+                            this.updateStatus(`🎵 Lejátszva: ${soundName}.mp3`);
+                        }).catch(err => {
+                            this.updateStatus(`❌ ${soundName} lejátszás sikertelen: ${err.message}`);
+                        });
+                    } else {
+                        this.updateStatus(`❌ Hang nem található: ${soundName}`);
+                    }
+                } catch (error) {
+                    console.warn(`Sound play error for ${soundName}:`, error);
+                    this.updateStatus(`❌ Hang lejátszási hiba (${soundName}): ${error.message}`);
+                }
+            },
+            
+            updateStatus(message) {
+                const statusEl = document.getElementById('status');
+                if (statusEl) {
+                    statusEl.textContent = `Állapot: ${message}`;
+                }
+            }
+        };
+
+        // Simple player simulation
+        const Player = {
+            x: 300,
+            y: 200,
+            isMoving: false,
+            direction: 'right',
+            animationFrame: 0,
+            animationTimer: 0,
+            
+            update() {
+                this.updateAnimation();
+                this.draw();
+            },
+            
+            updateAnimation() {
+                if (this.isMoving) {
+                    this.animationTimer++;
+                    if (this.animationTimer > 12) {
+                        const previousFrame = this.animationFrame;
+                        this.animationFrame = (this.animationFrame + 1) % 9;
+                        this.animationTimer = 0;
+                        
+                        // Play footstep sound on specific frames
+                        if (this.animationFrame === 1 || this.animationFrame === 4) {
+                            Audio.playFootstep();
+                        }
+                    }
+                } else {
+                    this.animationTimer++;
+                    if (this.animationTimer > 60) {
+                        this.animationFrame = (this.animationFrame + 1) % 2;
+                        this.animationTimer = 0;
+                    }
+                }
+            },
+            
+            draw() {
+                const canvas = document.getElementById('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Clear canvas
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw player
+                ctx.fillStyle = this.isMoving ? '#00ff00' : '#ffffff';
+                ctx.fillRect(this.x - 10, this.y - 20, 20, 40);
+                
+                // Draw direction indicator
+                ctx.fillStyle = '#ff0000';
+                const dirX = this.direction === 'right' ? this.x + 15 : this.x - 15;
+                ctx.fillRect(dirX - 5, this.y - 5, 10, 10);
+                
+                // Draw animation frame indicator
+                ctx.fillStyle = '#ffff00';
+                ctx.font = '16px Arial';
+                ctx.fillText(`Frame: ${this.animationFrame}`, 10, 30);
+                ctx.fillText(`Moving: ${this.isMoving}`, 10, 50);
+                ctx.fillText(`Direction: ${this.direction}`, 10, 70);
+            }
+        };
+
+        // Initialize
+        Audio.init();
+        
+        // Button event listeners
+        document.getElementById('play-step1').addEventListener('click', () => {
+            Audio.playSound('step1');
+        });
+        
+        document.getElementById('play-step2').addEventListener('click', () => {
+            Audio.playSound('step2');
+        });
+        
+        document.getElementById('play-footstep').addEventListener('click', () => {
+            Audio.playFootstep();
+        });
+        
+        // Keyboard controls
+        const keys = {};
+        
+        window.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+            
+            if (e.code === 'KeyA' || e.code === 'ArrowLeft') {
+                Player.isMoving = true;
+                Player.direction = 'left';
+            } else if (e.code === 'KeyD' || e.code === 'ArrowRight') {
+                Player.isMoving = true;
+                Player.direction = 'right';
+            }
+        });
+        
+        window.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+            
+            if ((e.code === 'KeyA' || e.code === 'ArrowLeft') && Player.direction === 'left') {
+                Player.isMoving = false;
+            } else if ((e.code === 'KeyD' || e.code === 'ArrowRight') && Player.direction === 'right') {
+                Player.isMoving = false;
+            }
+        });
+        
+        // Game loop
+        function gameLoop() {
+            Player.update();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        gameLoop();
+        
+        console.log("Footstep audio test ready!");
+    </script>
+</body>
+</html> 

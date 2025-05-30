@@ -4,6 +4,7 @@ import UI from './ui.js';
 import Map from './map.js';
 import Player from './player.js';
 import Animation from './animation.js';
+import Audio from './audio.js';
 
 // Wait for DOM to load
 window.addEventListener('DOMContentLoaded', () => {
@@ -122,8 +123,12 @@ window.addEventListener('DOMContentLoaded', () => {
   async function initializeGame() {
     UI.init();
     Map.init(); // Először a Map, hogy beállítsa a scaling értékeket
+    Audio.init(); // Audio rendszer inicializálása
     Player.init(); // Utána a Player, hogy használhassa a scaling értékeket
     await Game.init(); // Game.init most async, várjuk meg
+    
+    // Make Audio available globally for Player
+    window.Audio = Audio;
   }
   
   // Start initialization
