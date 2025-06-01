@@ -702,7 +702,7 @@ const Game = {
         gallery.innerHTML = '';
         
         const characters = {
-          male: ['male1', 'male2', 'male3', 'male4', 'male5', 'male6', 'male7'],
+          male: ['male1', 'male2', 'male3', 'male4', 'male5', 'male6', 'male7', 'male8'],
           female: ['female1', 'female2', 'female3', 'female4', 'female5', 'female6'],
           ghost: ['ghost']
         };
