@@ -458,6 +458,12 @@ const Game = {
                   <button class="menu-button" onclick="window.setTestRole('plague-noble', 'black')">Pestis-Nemes (Fekete)</button>
                 </div>
               </div>
+              <div class="role-group">
+                <strong>Ghost (halott játékos teszt):</strong>
+                <div class="role-buttons">
+                  <button class="menu-button" onclick="window.setTestRole('ghost', null)">Ghost</button>
+                </div>
+              </div>
             </div>
             
             <div class="character-select-panel">
@@ -465,6 +471,7 @@ const Game = {
               <div>
                 <button class="menu-button" onclick="window.showCharacters('male')">Férfi</button>
                 <button class="menu-button" onclick="window.showCharacters('female')">Nő</button>
+                <button class="menu-button" onclick="window.showCharacters('ghost')">Ghost</button>
               </div>
               <div id="character-gallery" class="character-gallery"></div>
             </div>
@@ -695,16 +702,27 @@ const Game = {
         gallery.innerHTML = '';
         
         const characters = {
-          male: ['male1', 'male2', 'male3', 'male4', 'male5', 'male6'],
-          female: ['female1', 'female2', 'female3', 'female4', 'female5', 'female6']
+          male: ['male1', 'male2', 'male3', 'male4', 'male5', 'male6', 'male7'],
+          female: ['female1', 'female2', 'female3', 'female4', 'female5', 'female6'],
+          ghost: ['ghost']
         };
         
         if (!characters[gender]) return;
         
         characters[gender].forEach(char => {
           const img = document.createElement('img');
-          const genderFolder = gender === 'male' ? 'males' : 'females';
-          img.src = 'assets/images/characters/' + genderFolder + '/' + char + '/idle/' + char + '_idle_facing_right1.png';
+          
+          // Ghost character has a different folder structure
+          let genderFolder, imagePath;
+          if (gender === 'ghost') {
+            genderFolder = 'ghost';
+            imagePath = `assets/images/characters/${genderFolder}/idle/${char}_idle1.png`;
+          } else {
+            genderFolder = gender === 'male' ? 'males' : 'females';
+            imagePath = `assets/images/characters/${genderFolder}/${char}/idle/${char}_idle_facing_right1.png`;
+          }
+          
+          img.src = imagePath;
           img.onerror = () => {
             console.log('Character image not found:', img.src);
             img.style.display = 'none';

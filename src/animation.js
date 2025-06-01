@@ -26,30 +26,56 @@ const Animation = {
   
   // Load animation frames
   loadFrames() {
-    // Determine gender folder based on character name
-    const genderFolder = this.character.startsWith('female') ? 'females' : 'males';
+    // Determine folder and frame counts based on character name
+    let genderFolder, idleFrameCount, walkFrameCount;
+    
+    if (this.character === 'ghost') {
+      genderFolder = 'ghost';
+      idleFrameCount = 2; // ghost has 2 idle frames
+      walkFrameCount = 5; // ghost has 5 walk frames
+    } else {
+      genderFolder = this.character.startsWith('female') ? 'females' : 'males';
+      idleFrameCount = this.idleFrameCount;
+      walkFrameCount = this.walkFrameCount;
+    }
     
     // Idle frames
     this.frames.idle.left = [];
     this.frames.idle.right = [];
-    for (let i = 1; i <= this.idleFrameCount; i++) {
+    for (let i = 1; i <= idleFrameCount; i++) {
       const imgL = new Image();
-      imgL.src = `assets/images/characters/${genderFolder}/${this.character}/idle/${this.character}_idle_facing_left${i}.png`;
-      this.frames.idle.left.push(imgL);
       const imgR = new Image();
-      imgR.src = `assets/images/characters/${genderFolder}/${this.character}/idle/${this.character}_idle_facing_right${i}.png`;
+      
+      if (this.character === 'ghost') {
+        // Ghost uses different naming convention
+        imgL.src = `assets/images/characters/${genderFolder}/idle/${this.character}_idle${i}.png`;
+        imgR.src = `assets/images/characters/${genderFolder}/idle/${this.character}_idle${i}.png`; // Same image for both directions
+      } else {
+        imgL.src = `assets/images/characters/${genderFolder}/${this.character}/idle/${this.character}_idle_facing_left${i}.png`;
+        imgR.src = `assets/images/characters/${genderFolder}/${this.character}/idle/${this.character}_idle_facing_right${i}.png`;
+      }
+      
+      this.frames.idle.left.push(imgL);
       this.frames.idle.right.push(imgR);
     }
     
     // Walk frames
     this.frames.walk.left = [];
     this.frames.walk.right = [];
-    for (let i = 1; i <= this.walkFrameCount; i++) {
+    for (let i = 1; i <= walkFrameCount; i++) {
       const imgL = new Image();
-      imgL.src = `assets/images/characters/${genderFolder}/${this.character}/walk/${this.character}_walk_facing_left${i}.png`;
-      this.frames.walk.left.push(imgL);
       const imgR = new Image();
-      imgR.src = `assets/images/characters/${genderFolder}/${this.character}/walk/${this.character}_walk_facing_right${i}.png`;
+      
+      if (this.character === 'ghost') {
+        // Ghost uses different naming convention
+        imgL.src = `assets/images/characters/${genderFolder}/walk/${this.character}_walk_facing_left${i}.png`;
+        imgR.src = `assets/images/characters/${genderFolder}/walk/${this.character}_walk_facing_right${i}.png`;
+      } else {
+        imgL.src = `assets/images/characters/${genderFolder}/${this.character}/walk/${this.character}_walk_facing_left${i}.png`;
+        imgR.src = `assets/images/characters/${genderFolder}/${this.character}/walk/${this.character}_walk_facing_right${i}.png`;
+      }
+      
+      this.frames.walk.left.push(imgL);
       this.frames.walk.right.push(imgR);
     }
   },
@@ -144,6 +170,10 @@ const Animation = {
       // Nemes (beleértve a pestis-nemest is): csoport szín háttér + ARANY frame
       backgroundColor = groupColors[groupColor] || '#444444';
       frameColor = '#FFD700'; // arany frame
+    } else if (displayRole === 'ghost') {
+      // Ghost: szürke áttetsző háttér + fehér frame
+      backgroundColor = '#808080'; // szürke
+      frameColor = '#FFFFFF'; // fehér frame
     } else {
       // Polgár (beleértve a pestis-polgárt is): csoport szín háttér + FEKETE frame
       backgroundColor = groupColors[groupColor] || '#444444';
@@ -162,6 +192,8 @@ const Animation = {
     let textColor;
     if (displayRole === 'prince') {
       textColor = '#000000'; // fekete szöveg arany háttéren
+    } else if (displayRole === 'ghost') {
+      textColor = '#000000'; // fekete szöveg szürke háttéren
     } else if (backgroundColor === '#F5F5F5') {
       // Fehér háttér esetén fekete szöveg
       textColor = '#000000';
