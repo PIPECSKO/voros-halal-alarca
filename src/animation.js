@@ -8,13 +8,21 @@ const Animation = {
   // Animation frames
   frames: {
     idle: { left: [], right: [] },
-    walk: { left: [], right: [] }
+    walk: { left: [], right: [] },
+    slash: { left: [], right: [] }
   },
   
   character: 'male1',
   
   idleFrameCount: 2,
   walkFrameCount: 9,
+  slashFrameCount: 5, // Prince has 5 slash frames
+  
+  // Slash animation state
+  isPlayingSlash: false,
+  slashDirection: 'right',
+  slashFrame: 0,
+  slashAnimationId: null,
   
   // Initialize animations
   init(character = 'male1') {
@@ -27,16 +35,23 @@ const Animation = {
   // Load animation frames
   loadFrames() {
     // Determine folder and frame counts based on character name
-    let genderFolder, idleFrameCount, walkFrameCount;
+    let genderFolder, idleFrameCount, walkFrameCount, slashFrameCount;
     
     if (this.character === 'ghost') {
       genderFolder = 'ghost';
       idleFrameCount = 2; // ghost has 2 idle frames
       walkFrameCount = 5; // ghost has 5 walk frames
+      slashFrameCount = 0; // ghost has no slash animation
+    } else if (this.character === 'prince') {
+      genderFolder = 'prince';
+      idleFrameCount = 2; // prince has 2 idle frames
+      walkFrameCount = 8; // prince has 8 walk frames
+      slashFrameCount = 5; // prince has 5 slash frames
     } else {
       genderFolder = this.character.startsWith('female') ? 'females' : 'males';
       idleFrameCount = this.idleFrameCount;
       walkFrameCount = this.walkFrameCount;
+      slashFrameCount = 0; // other characters don't have slash animation
     }
     
     // Idle frames
@@ -50,6 +65,10 @@ const Animation = {
         // Ghost uses different naming convention
         imgL.src = `assets/images/characters/${genderFolder}/idle/${this.character}_idle${i}.png`;
         imgR.src = `assets/images/characters/${genderFolder}/idle/${this.character}_idle${i}.png`; // Same image for both directions
+      } else if (this.character === 'prince') {
+        // Prince uses direct folder structure
+        imgL.src = `assets/images/characters/${genderFolder}/idle/${this.character}_idle_facing_left${i}.png`;
+        imgR.src = `assets/images/characters/${genderFolder}/idle/${this.character}_idle_facing_right${i}.png`;
       } else {
         imgL.src = `assets/images/characters/${genderFolder}/${this.character}/idle/${this.character}_idle_facing_left${i}.png`;
         imgR.src = `assets/images/characters/${genderFolder}/${this.character}/idle/${this.character}_idle_facing_right${i}.png`;
@@ -70,6 +89,10 @@ const Animation = {
         // Ghost uses different naming convention
         imgL.src = `assets/images/characters/${genderFolder}/walk/${this.character}_walk_facing_left${i}.png`;
         imgR.src = `assets/images/characters/${genderFolder}/walk/${this.character}_walk_facing_right${i}.png`;
+      } else if (this.character === 'prince') {
+        // Prince uses direct folder structure
+        imgL.src = `assets/images/characters/${genderFolder}/walk/${this.character}_walk_facing_left${i}.png`;
+        imgR.src = `assets/images/characters/${genderFolder}/walk/${this.character}_walk_facing_right${i}.png`;
       } else {
         imgL.src = `assets/images/characters/${genderFolder}/${this.character}/walk/${this.character}_walk_facing_left${i}.png`;
         imgR.src = `assets/images/characters/${genderFolder}/${this.character}/walk/${this.character}_walk_facing_right${i}.png`;
@@ -77,6 +100,22 @@ const Animation = {
       
       this.frames.walk.left.push(imgL);
       this.frames.walk.right.push(imgR);
+    }
+    
+    // Slash frames (only for prince)
+    this.frames.slash.left = [];
+    this.frames.slash.right = [];
+    if (slashFrameCount > 0 && this.character === 'prince') {
+      for (let i = 1; i <= slashFrameCount; i++) {
+        const imgL = new Image();
+        const imgR = new Image();
+        
+        imgL.src = `assets/images/characters/${genderFolder}/slash/${this.character}_slash_facing_left${i}.png`;
+        imgR.src = `assets/images/characters/${genderFolder}/slash/${this.character}_slash_facing_right${i}.png`;
+        
+        this.frames.slash.left.push(imgL);
+        this.frames.slash.right.push(imgR);
+      }
     }
   },
   
@@ -88,14 +127,31 @@ const Animation = {
     // Ne töröljük a canvas-t, a Map kezeli azt
     // Karakter kirajzolása
     let char = (window.Player && window.Player.character) ? window.Player.character : (window.selectedCharacter || this.character || 'male1');
-    const animType = isMoving ? 'walk' : 'idle';
-    if (!this.frames[animType] || !this.frames[animType][direction] || this.frames[animType][direction].length === 0 || (this.character !== char)) {
+    
+    // Check if we're playing slash animation
+    let animType, currentDirection, currentFrame;
+    
+    if (this.isPlayingSlash && this.character === 'prince') {
+      // Use slash animation
+      animType = 'slash';
+      currentDirection = this.slashDirection;
+      currentFrame = this.slashFrame;
+      console.log('Drawing slash frame:', currentFrame, 'direction:', currentDirection);
+    } else {
+      // Use normal idle/walk animation
+      animType = isMoving ? 'walk' : 'idle';
+      currentDirection = direction;
+      currentFrame = animationFrame;
+    }
+    
+    if (!this.frames[animType] || !this.frames[animType][currentDirection] || this.frames[animType][currentDirection].length === 0 || (this.character !== char)) {
       this.character = char;
       this.loadFrames();
     }
-    const frames = this.frames[animType][direction];
+    
+    const frames = this.frames[animType][currentDirection];
     if (!frames || frames.length === 0) return;
-    const frame = frames[animationFrame % frames.length];
+    const frame = frames[currentFrame % frames.length];
     
     // Ha a Map kamera rendszert használ, alkalmazni kell a transform-ot
     const usingCameraSystem = window.Map && window.Map.camera;
@@ -229,6 +285,66 @@ const Animation = {
     }
     
     this.activeAnimations = {};
+  },
+  
+  // Play slash animation
+  playSlashAnimation(direction = 'right', callback) {
+    console.log('=== SLASH ANIMATION START ===');
+    console.log('Current character:', this.character);
+    console.log('Direction:', direction);
+    
+    // Check if prince character and has slash frames
+    if (this.character !== 'prince' || !this.frames.slash[direction] || this.frames.slash[direction].length === 0) {
+      console.warn('Slash animation not available for character:', this.character);
+      if (callback) callback();
+      return;
+    }
+    
+    // If already playing slash animation, ignore
+    if (this.isPlayingSlash) {
+      console.log('Slash animation already playing, ignoring');
+      return;
+    }
+    
+    console.log('Starting slash animation with', this.frames.slash[direction].length, 'frames');
+    
+    // Stop movement immediately - don't store previous state
+    if (window.Player) {
+      window.Player.isMoving = false;
+      console.log('Player movement stopped for slash animation');
+    }
+    
+    // Set slash animation state
+    this.isPlayingSlash = true;
+    this.slashDirection = direction;
+    this.slashFrame = 0;
+    
+    const frameDuration = 100; // 100ms per frame
+    const totalFrames = this.frames.slash[direction].length;
+    
+    this.slashAnimationId = setInterval(() => {
+      this.slashFrame++;
+      
+      if (this.slashFrame >= totalFrames) {
+        // Animation completed
+        clearInterval(this.slashAnimationId);
+        this.slashAnimationId = null;
+        this.isPlayingSlash = false;
+        this.slashFrame = 0;
+        
+        console.log('Slash animation completed');
+        
+        // Force player to idle state - don't restore previous movement
+        if (window.Player) {
+          window.Player.isMoving = false; // Always stop after slash
+          console.log('Player forced to idle state after slash');
+        }
+        
+        if (callback) callback();
+      } else {
+        console.log('Slash frame:', this.slashFrame + 1, '/', totalFrames);
+      }
+    }, frameDuration);
   }
 };
 

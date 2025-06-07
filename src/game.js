@@ -880,8 +880,14 @@ const Game = {
         window.testGroupColor = groupColor;
         console.log('Test role set to:', role, 'with group color:', groupColor);
         
+        // Automatically set prince character when prince role is selected
+        if (role === 'prince') {
+          window.selectedCharacter = 'prince';
+          console.log('Character automatically set to prince');
+        }
+        
         // Hide all action buttons first
-        const buttons = ['infect-button', 'stab-button', 'task-button', 'clean-body-button'];
+        const buttons = ['infect-button', 'slash-button', 'task-button', 'clean-body-button'];
         buttons.forEach(id => {
           const btn = document.getElementById(id);
           if (btn) btn.style.display = 'none';
@@ -889,8 +895,8 @@ const Game = {
         
         // Show relevant action buttons based on role
         if (role === 'prince') {
-          const stabBtn = document.getElementById('stab-button');
-          if (stabBtn) stabBtn.style.display = 'block';
+          const slashBtn = document.getElementById('slash-button');
+          if (slashBtn) slashBtn.style.display = 'block';
         } else if (role === 'plague-commoner' || role === 'plague-noble' || role === 'plague') {
           const infectBtn = document.getElementById('infect-button');
           if (infectBtn) infectBtn.style.display = 'block';
@@ -906,7 +912,8 @@ const Game = {
         const characters = {
           male: ['male1', 'male2', 'male3', 'male4', 'male5', 'male6', 'male7', 'male8'],
           female: ['female1', 'female2', 'female3', 'female4', 'female5', 'female6'],
-          ghost: ['ghost']
+          ghost: ['ghost'],
+          special: ['prince']
         };
         
         if (!characters[gender]) return;
@@ -914,11 +921,14 @@ const Game = {
         characters[gender].forEach(char => {
           const img = document.createElement('img');
           
-          // Ghost character has a different folder structure
+          // Special handling for different character types
           let genderFolder, imagePath;
           if (gender === 'ghost') {
             genderFolder = 'ghost';
             imagePath = `assets/images/characters/${genderFolder}/idle/${char}_idle1.png`;
+          } else if (gender === 'special' && char === 'prince') {
+            genderFolder = 'prince';
+            imagePath = `assets/images/characters/${genderFolder}/idle/${char}_idle_facing_right1.png`;
           } else {
             genderFolder = gender === 'male' ? 'males' : 'females';
             imagePath = `assets/images/characters/${genderFolder}/${char}/idle/${char}_idle_facing_right1.png`;
@@ -967,7 +977,22 @@ const Game = {
       function startGameLocally() {
         try {
           console.log('Starting game with character:', window.selectedCharacter || 'male1');
+          console.log('Starting game with test role:', window.testRole);
           
+          // Ensure prince character is set if prince role
+          if (window.testRole === 'prince' && window.selectedCharacter !== 'prince') {
+            window.selectedCharacter = 'prince';
+            console.log('Forcing prince character for prince role');
+          }
+          
+          const character = window.selectedCharacter || 'male1';
+          console.log('Final character:', character);
+          
+          // Set Game character
+          window.Game.character = character;
+          console.log('Game character set to:', window.Game.character);
+          
+          // Játék képernyő létrehozása
           // Játék képernyő létrehozása
           document.body.innerHTML = `
             <style>
@@ -1223,6 +1248,10 @@ const Game = {
                 <span class="action-icon">⚔️</span>
                 <span class="action-text">Suhint</span>
               </button>
+              <button id="slash-button" class="action-button" style="display: none;">
+                <span class="action-icon">🗡️</span>
+                <span class="action-text">Slash</span>
+              </button>
               <button id="task-button" class="action-button" style="display: none;">
                 <span class="action-icon">📜</span>
                 <span class="action-text">Feladat</span>
@@ -1323,17 +1352,31 @@ const Game = {
               const role = window.Game.playerRole;
               console.log('Setting up action buttons for role:', role);
               if (role === 'prince') {
-                const stabBtn = document.getElementById('stab-button');
-                if (stabBtn) {
-                  stabBtn.style.display = 'block';
-                  console.log('Stab button shown for prince');
+                const slashBtn = document.getElementById('slash-button');
+                if (slashBtn) slashBtn.style.display = 'block';
+                console.log('Slash button shown for prince');
+                
+                // Bind event handler for prince slash button
+                if (slashBtn) {
+                  slashBtn.addEventListener('click', function() {
+                    console.log('Slash button clicked!');
+                    if (window.Animation && window.Player) {
+                      // Get current direction from Player
+                      const direction = window.Player.direction || 'right';
+                      console.log('Playing slash animation in direction:', direction);
+                      
+                      // Play slash animation
+                      window.Animation.playSlashAnimation(direction, () => {
+                        console.log('Slash animation completed');
+                      });
+                    }
+                  });
+                  console.log('Slash button event handler attached');
                 }
               } else if (role === 'plague-commoner' || role === 'plague-noble' || role === 'plague') {
                 const infectBtn = document.getElementById('infect-button');
-                if (infectBtn) {
-                  infectBtn.style.display = 'block';
-                  console.log('Infect button shown for plague role');
-                }
+                if (infectBtn) infectBtn.style.display = 'block';
+                console.log('Infect button shown for plague role');
               }
               
               // Játék ciklus indítása
@@ -1928,6 +1971,10 @@ const Game = {
               <span class="action-icon">⚔️</span>
               <span class="action-text">Suhint</span>
             </button>
+            <button id="slash-button" class="action-button" style="display: none;">
+              <span class="action-icon">🗡️</span>
+              <span class="action-text">Slash</span>
+            </button>
             <button id="task-button" class="action-button" style="display: none;">
               <span class="action-icon">📜</span>
               <span class="action-text">Feladat</span>
@@ -2169,6 +2216,7 @@ const Game = {
       UI.toggleActionButton('infect-button', true);
     } else if (roleInfo.role === 'prince') {
       UI.toggleActionButton('stab-button', true);
+      UI.toggleActionButton('slash-button', true);
     }
   },
   
@@ -2296,6 +2344,7 @@ const Game = {
     UI.toggleActionButton('clean-body-button', false);
     UI.toggleActionButton('infect-button', false);
     UI.toggleActionButton('stab-button', false);
+    UI.toggleActionButton('slash-button', false);
   },
   
   handleTaskCompleted(taskId) {
