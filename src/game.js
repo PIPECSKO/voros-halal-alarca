@@ -1056,10 +1056,163 @@ const Game = {
                 pointer-events: none;
                 text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
               }
+              
+              /* Pause Menu Styles */
+              .pause-menu-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0, 0, 0, 0.8);
+                z-index: 2000;
+                display: none;
+                justify-content: center;
+                align-items: center;
+              }
+              .pause-menu {
+                background: #1a0000;
+                border: 3px solid #8b0000;
+                border-radius: 10px;
+                padding: 30px;
+                min-width: 400px;
+                max-width: 500px;
+                text-align: center;
+                box-shadow: 0 0 30px rgba(139, 0, 0, 0.7);
+              }
+              .pause-menu h2 {
+                color: #8b0000;
+                font-family: 'MedievalSharp', serif;
+                font-size: 24px;
+                margin-bottom: 25px;
+                margin-top: 0;
+              }
+              .pause-menu-section {
+                margin-bottom: 20px;
+                padding: 15px;
+                border: 1px solid #8b0000;
+                border-radius: 5px;
+                background: rgba(26, 0, 0, 0.5);
+              }
+              .pause-menu-section h3 {
+                color: #8b0000;
+                font-family: 'MedievalSharp', serif;
+                font-size: 16px;
+                margin-bottom: 15px;
+                margin-top: 0;
+              }
+              .pause-volume-control {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 10px;
+              }
+              .pause-volume-control label {
+                color: #8b0000;
+                font-family: 'MedievalSharp', serif;
+                font-size: 14px;
+                flex: 1;
+                text-align: left;
+              }
+              .pause-volume-control input[type="range"] {
+                flex: 2;
+                margin: 0 10px;
+                accent-color: #8b0000;
+              }
+              .pause-volume-control span {
+                color: #8b0000;
+                font-family: 'MedievalSharp', serif;
+                font-size: 12px;
+                width: 40px;
+                text-align: right;
+              }
+              .pause-menu-buttons {
+                display: flex;
+                gap: 15px;
+                justify-content: center;
+                margin-top: 25px;
+              }
+              .pause-menu-button {
+                background: #1a0000;
+                color: #8b0000;
+                border: 2px solid #8b0000;
+                padding: 12px 20px;
+                font-family: 'MedievalSharp', serif;
+                font-size: 14px;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+              }
+              .pause-menu-button:hover {
+                background: #8b0000;
+                color: #1a0000;
+              }
+              .fullscreen-toggle {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              }
+              .fullscreen-toggle label {
+                color: #8b0000;
+                font-family: 'MedievalSharp', serif;
+                font-size: 14px;
+              }
+              .fullscreen-toggle button {
+                background: #1a0000;
+                color: #8b0000;
+                border: 2px solid #8b0000;
+                padding: 8px 16px;
+                font-family: 'MedievalSharp', serif;
+                font-size: 12px;
+                border-radius: 3px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+              }
+              .fullscreen-toggle button:hover {
+                background: #8b0000;
+                color: #1a0000;
+              }
             </style>
             <canvas id="game-canvas"></canvas>
             <div id="role-indicator">Betöltés...</div>
-            <div id="fullscreen-hint">F11 - Full screen [on/off]</div>
+            <div id="fullscreen-hint">F11 - Full screen [on/off] | P - Szünet</div>
+            
+            <!-- Pause Menu -->
+            <div id="pause-menu-overlay" class="pause-menu-overlay">
+              <div class="pause-menu">
+                <h2>Szünet</h2>
+                
+                <!-- Volume Controls Section -->
+                <div class="pause-menu-section">
+                  <h3>Hangerő beállítások</h3>
+                  <div class="pause-volume-control">
+                    <label>Zene hangerő:</label>
+                    <input type="range" id="pause-music-volume-slider" min="0" max="100" value="40">
+                    <span id="pause-music-volume-display">40%</span>
+                  </div>
+                  <div class="pause-volume-control">
+                    <label>Hangeffektek:</label>
+                    <input type="range" id="pause-sfx-volume-slider" min="0" max="100" value="70">
+                    <span id="pause-sfx-volume-display">70%</span>
+                  </div>
+                </div>
+                
+                <!-- Fullscreen Section -->
+                <div class="pause-menu-section">
+                  <h3>Képernyő beállítások</h3>
+                  <div class="fullscreen-toggle">
+                    <label>Teljes képernyő:</label>
+                    <button id="fullscreen-toggle-btn" onclick="window.toggleFullscreen()">Váltás</button>
+                  </div>
+                </div>
+                
+                <!-- Menu Buttons -->
+                <div class="pause-menu-buttons">
+                  <button class="pause-menu-button" onclick="window.resumeGame()">Folytatás</button>
+                  <button class="pause-menu-button" onclick="window.leaveGame()">Kilépés</button>
+                </div>
+              </div>
+            </div>
             
             <div class="action-buttons">
               <button id="infect-button" class="action-button" style="display: none;">
@@ -1210,6 +1363,134 @@ const Game = {
               gameLoop();
               console.log('Játék sikeresen elindult!');
               
+              // Add pause menu functionality
+              window.isPaused = false;
+              
+              // Pause menu functions
+              window.showPauseMenu = function() {
+                console.log('Showing pause menu');
+                window.isPaused = true;
+                const pauseOverlay = document.getElementById('pause-menu-overlay');
+                if (pauseOverlay) {
+                  pauseOverlay.style.display = 'flex';
+                  
+                  // Initialize pause menu volume controls with current values
+                  if (window.Audio) {
+                    // Music volume
+                    const pauseMusicSlider = document.getElementById('pause-music-volume-slider');
+                    const pauseMusicDisplay = document.getElementById('pause-music-volume-display');
+                    if (pauseMusicSlider && pauseMusicDisplay) {
+                      const currentMusicVolume = Math.round(window.Audio.getMusicVolume() * 100);
+                      pauseMusicSlider.value = currentMusicVolume;
+                      pauseMusicDisplay.textContent = currentMusicVolume + '%';
+                    }
+                    
+                    // SFX volume
+                    const pauseSfxSlider = document.getElementById('pause-sfx-volume-slider');
+                    const pauseSfxDisplay = document.getElementById('pause-sfx-volume-display');
+                    if (pauseSfxSlider && pauseSfxDisplay) {
+                      const currentSfxVolume = Math.round(window.Audio.getSoundEffectsVolume() * 100);
+                      pauseSfxSlider.value = currentSfxVolume;
+                      pauseSfxDisplay.textContent = currentSfxVolume + '%';
+                    }
+                  }
+                }
+              };
+              
+              window.hidePauseMenu = function() {
+                console.log('Hiding pause menu');
+                window.isPaused = false;
+                const pauseOverlay = document.getElementById('pause-menu-overlay');
+                if (pauseOverlay) {
+                  pauseOverlay.style.display = 'none';
+                }
+              };
+              
+              window.resumeGame = function() {
+                window.hidePauseMenu();
+              };
+              
+              window.leaveGame = function() {
+                const confirmLeave = confirm('Biztosan ki akarsz lépni a játékból?');
+                if (confirmLeave) {
+                  // Reload the page to go back to main menu
+                  window.location.reload();
+                }
+              };
+              
+              window.toggleFullscreen = function() {
+                if (!document.fullscreenElement) {
+                  // Enter fullscreen
+                  if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                  } else if (document.documentElement.webkitRequestFullscreen) {
+                    document.documentElement.webkitRequestFullscreen();
+                  } else if (document.documentElement.msRequestFullscreen) {
+                    document.documentElement.msRequestFullscreen();
+                  }
+                } else {
+                  // Exit fullscreen
+                  if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                  } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                  } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                  }
+                }
+              };
+              
+              // Setup pause menu volume controls
+              const setupPauseVolumeControls = () => {
+                // Music volume control
+                const pauseMusicSlider = document.getElementById('pause-music-volume-slider');
+                const pauseMusicDisplay = document.getElementById('pause-music-volume-display');
+                
+                if (pauseMusicSlider && pauseMusicDisplay && window.Audio) {
+                  pauseMusicSlider.addEventListener('input', (e) => {
+                    const volume = parseInt(e.target.value) / 100;
+                    window.Audio.setMusicVolume(volume);
+                    pauseMusicDisplay.textContent = e.target.value + '%';
+                    console.log('Music volume changed to:', volume);
+                  });
+                }
+                
+                // SFX volume control
+                const pauseSfxSlider = document.getElementById('pause-sfx-volume-slider');
+                const pauseSfxDisplay = document.getElementById('pause-sfx-volume-display');
+                
+                if (pauseSfxSlider && pauseSfxDisplay && window.Audio) {
+                  pauseSfxSlider.addEventListener('input', (e) => {
+                    const volume = parseInt(e.target.value) / 100;
+                    window.Audio.setSoundEffectsVolume(volume);
+                    pauseSfxDisplay.textContent = e.target.value + '%';
+                    console.log('SFX volume changed to:', volume);
+                  });
+                }
+              };
+              
+              // Setup pause menu controls
+              setTimeout(() => {
+                setupPauseVolumeControls();
+              }, 100);
+              
+              // Keyboard event handler for pause menu
+              window.handleGameKeydown = function(event) {
+                if (event.code === 'KeyP') {
+                  event.preventDefault();
+                  if (window.isPaused) {
+                    window.hidePauseMenu();
+                  } else {
+                    window.showPauseMenu();
+                  }
+                } else if (event.code === 'Escape' && window.isPaused) {
+                  event.preventDefault();
+                  window.hidePauseMenu();
+                }
+              };
+              
+              // Add keyboard event listener
+              document.addEventListener('keydown', window.handleGameKeydown);
             } catch (initError) {
               console.error('Hiba a modulok inicializálásakor:', initError);
               alert('Hiba a játék inicializálásakor: ' + initError.message);
