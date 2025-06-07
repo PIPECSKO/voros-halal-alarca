@@ -41,6 +41,26 @@
         <div class="game-code-container" style="display: none;">
           <p>Szobakód: <span id="game-code"></span></p>
         </div>
+        
+        <!-- Volume Controls -->
+        <div class="volume-controls-main-menu" style="
+          margin-top: 30px;
+          padding-top: 20px;
+          border-top: 2px solid #8b0000;
+          text-align: center;
+        ">
+          <h3 style="color: #8b0000; margin-bottom: 15px; font-family: 'MedievalSharp', serif;">Hangerő beállítások</h3>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+              <label style="color: #8b0000; font-size: 14px; font-family: 'MedievalSharp', serif;">Zene hangerő</label>
+              <input type="range" id="main-menu-music-volume-slider" min="0" max="100" value="40" style="
+                width: 200px;
+                accent-color: #8b0000;
+              ">
+              <span id="main-menu-music-volume-display" style="color: #8b0000; font-size: 12px; font-family: 'MedievalSharp', serif;">40%</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     
