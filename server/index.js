@@ -257,7 +257,7 @@ io.on('connection', (socket) => {
 
     // Mark game as started
     games[gameCode].started = true;
-    
+
     // Initialize game state
     initializeGame(gameCode);
     
