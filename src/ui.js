@@ -157,6 +157,7 @@ const UI = {
       this.addClickHandler('clean-body-button', this.handleCleanBodyAction);
       this.addClickHandler('infect-button', this.handleInfectAction);
       this.addClickHandler('stab-button', this.handleStabAction);
+      this.addClickHandler('slash-button', this.handleSlashAction);
       
       // Add Enter key handler for game code input
       const gameCodeInput = document.getElementById('game-code-input');
@@ -574,6 +575,30 @@ const UI = {
     }
   },
   
+  // Handler for slash animation button
+  handleSlashAction() {
+    console.log('Slash animation triggered for prince');
+    console.log('Current character:', window.selectedCharacter);
+    console.log('Current role:', window.Game ? window.Game.playerRole : 'No Game object');
+    console.log('Animation object:', !!window.Animation);
+    
+    // Check if character is prince (either by role or selected character)
+    const isPrince = (window.selectedCharacter === 'prince') || 
+                     (window.Game && window.Game.playerRole === 'prince') ||
+                     (window.testRole === 'prince');
+    
+    if (window.Animation && isPrince) {
+      // Determine direction based on player's current direction
+      const direction = (window.Player && window.Player.direction) || 'right';
+      console.log('Playing slash animation in direction:', direction);
+      window.Animation.playSlashAnimation(direction, () => {
+        console.log('Slash animation completed');
+      });
+    } else {
+      console.log('Slash animation not available. Character:', window.selectedCharacter, 'Role:', window.Game ? window.Game.playerRole : 'none');
+    }
+  },
+  
   // Lobby gender és karakterválasztó logika
   setupLobbyCharacterSelection() {
     const gallery = document.getElementById('character-gallery');
@@ -632,6 +657,23 @@ const UI = {
         };
         gallery.appendChild(img);
       });
+    };
+    document.getElementById('gender-special').onclick = () => {
+      gallery.innerHTML = '';
+      // Prince character
+      const img = document.createElement('img');
+      img.src = 'assets/images/characters/prince/idle/prince_idle_facing_right1.png';
+      img.alt = 'prince';
+      img.style.width = '64px';
+      img.style.height = '96px';
+      img.style.cursor = 'pointer';
+      img.style.border = '2px solid transparent';
+      img.onclick = () => {
+        window.selectedCharacter = 'prince';
+        Array.from(gallery.children).forEach(child => child.style.border = '2px solid transparent');
+        img.style.border = '2px solid #FFD700';
+      };
+      gallery.appendChild(img);
     };
   }
 };
