@@ -109,6 +109,7 @@ const assetLoader = {
   
   musicPaths: {
     'menu_music': 'assets/sounds/menu_music.mp3',
+    'lobby_music': 'assets/sounds/lobby/lobby1.mp3',
     'game_music': 'assets/sounds/game_music.mp3',
     'discussion_music': 'assets/sounds/discussion_music.mp3',
     'plague_win': 'assets/sounds/plague_win.mp3',

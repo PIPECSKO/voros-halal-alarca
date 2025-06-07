@@ -4,6 +4,8 @@ import Map from './map.js';
 import Player from './player.js';
 import Animation from './animation.js';
 import SocketConnector from './socket_connector.js';
+import NPC from './npc.js';
+import Audio from './audio.js';
 
 const Game = {
   // Socket.io connection
@@ -47,6 +49,13 @@ const Game = {
     console.log("Game.init started");
     
     try {
+      // Initialize audio system first
+      if (Audio && Audio.init) {
+        Audio.init();
+        window.Audio = Audio; // Make globally accessible
+        console.log("Audio system initialized and made globally accessible");
+      }
+      
       // Initialize default position
       this.position = {
         x: window.innerWidth / 2,
@@ -85,6 +94,15 @@ const Game = {
           this.socket = socket;
           this.handleConnect();
           UI.showScreen('menu-screen');
+          
+          // Start lobby music on main menu
+          setTimeout(() => {
+            if (window.Audio && window.Audio.resumeLobbyMusic) {
+              console.log("Resuming lobby music on main menu");
+              window.Audio.resumeLobbyMusic();
+            }
+          }, 500);
+          
           this.setupSocketListeners();
         },
         onDisconnect: (reason) => {
@@ -101,6 +119,14 @@ const Game = {
           console.error("Failed to reconnect to server");
           UI.showError("Nem sikerült újrakapcsolódni a szerverhez. Offline módban folytathatod a játékot.");
           this.socket = SocketConnector.socket;
+          
+          // Start lobby music in offline mode too
+          setTimeout(() => {
+            if (window.Audio && window.Audio.resumeLobbyMusic) {
+              console.log("Resuming lobby music in offline mode");
+              window.Audio.resumeLobbyMusic();
+            }
+          }, 500);
         }
       });
     } catch (error) {
@@ -113,6 +139,14 @@ const Game = {
         on: () => {},
         emit: () => console.log("Emitting event (offline mode)")
       };
+      
+      // Start lobby music in offline mode too
+      setTimeout(() => {
+        if (window.Audio && window.Audio.resumeLobbyMusic) {
+          console.log("Resuming lobby music in offline mode");
+          window.Audio.resumeLobbyMusic();
+        }
+      }, 500);
     }
   },
   
@@ -152,6 +186,12 @@ const Game = {
         clearInterval(i);
       }
       console.log('All timers cleared before lobby creation');
+      
+      // Start lobby music
+      if (window.Audio && window.Audio.resumeLobbyMusic) {
+        console.log("Resuming lobby music from createLobbyInterface");
+        window.Audio.resumeLobbyMusic();
+      }
       
       // TELJES OLDAL RESET - CSAK VÁRÓTEREM
       document.body.innerHTML = `
@@ -395,6 +435,121 @@ const Game = {
             border-color: #ff0000;
             box-shadow: 0 0 20px rgba(139, 0, 0, 0.6);
           }
+          /* Pause Menu Styles */
+          .pause-menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+          }
+          .pause-menu {
+            background: #1a0000;
+            border: 3px solid #8b0000;
+            border-radius: 10px;
+            padding: 30px;
+            min-width: 400px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(139, 0, 0, 0.7);
+          }
+          .pause-menu h2 {
+            color: #8b0000;
+            font-family: 'MedievalSharp', serif;
+            font-size: 24px;
+            margin-bottom: 25px;
+            margin-top: 0;
+          }
+          .pause-menu-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #8b0000;
+            border-radius: 5px;
+            background: rgba(26, 0, 0, 0.5);
+          }
+          .pause-menu-section h3 {
+            color: #8b0000;
+            font-family: 'MedievalSharp', serif;
+            font-size: 16px;
+            margin-bottom: 15px;
+            margin-top: 0;
+          }
+          .pause-volume-control {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+          }
+          .pause-volume-control label {
+            color: #8b0000;
+            font-family: 'MedievalSharp', serif;
+            font-size: 14px;
+            flex: 1;
+            text-align: left;
+          }
+          .pause-volume-control input[type="range"] {
+            flex: 2;
+            margin: 0 10px;
+            accent-color: #8b0000;
+          }
+          .pause-volume-control span {
+            color: #8b0000;
+            font-family: 'MedievalSharp', serif;
+            font-size: 12px;
+            width: 40px;
+            text-align: right;
+          }
+          .pause-menu-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+          }
+          .pause-menu-button {
+            background: #1a0000;
+            color: #8b0000;
+            border: 2px solid #8b0000;
+            padding: 12px 20px;
+            font-family: 'MedievalSharp', serif;
+            font-size: 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+          }
+          .pause-menu-button:hover {
+            background: #8b0000;
+            color: #1a0000;
+          }
+          .fullscreen-toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+          .fullscreen-toggle label {
+            color: #8b0000;
+            font-family: 'MedievalSharp', serif;
+            font-size: 14px;
+          }
+          .fullscreen-toggle button {
+            background: #1a0000;
+            color: #8b0000;
+            border: 2px solid #8b0000;
+            padding: 8px 16px;
+            font-family: 'MedievalSharp', serif;
+            font-size: 12px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+          }
+          .fullscreen-toggle button:hover {
+            background: #8b0000;
+            color: #1a0000;
+          }
         </style>
         
         <div class="lobby-container">
@@ -479,6 +634,26 @@ const Game = {
           <div class="start-game-section">
             <button id="start-game-button" class="menu-button" onclick="window.startGame()" disabled>Játék indítása (várj hogy mindenki kész legyen)</button>
           </div>
+          
+          <!-- Volume Controls -->
+          <div class="volume-controls-section" style="
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #8b0000;
+          ">
+            <h3 style="color: #8b0000; margin-bottom: 15px;">Hangerő beállítások</h3>
+            <div style="display: flex; gap: 40px; justify-content: center; align-items: center;">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                <label style="color: #8b0000; font-size: 14px;">Zene hangerő</label>
+                <input type="range" id="music-volume-slider" min="0" max="100" value="40" style="
+                  width: 150px;
+                  accent-color: #8b0000;
+                ">
+                <span id="music-volume-display" style="color: #8b0000; font-size: 12px;">40%</span>
+              </div>
+            </div>
+          </div>
         </div>
       `;
       
@@ -548,7 +723,7 @@ const Game = {
             statusSpan.style.fontWeight = 'bold';
             statusSpan.style.fontSize = '16px';
             li.classList.add('ready');
-          } else {
+      } else {
             statusSpan.textContent = '○';
             statusSpan.style.color = '#8b0000';
             statusSpan.style.fontSize = '14px';
@@ -626,7 +801,7 @@ const Game = {
         if (window.isReady) {
           readyBtn.textContent = 'Nem vagyok kész';
           readyBtn.classList.add('ready');
-        } else {
+      } else {
           readyBtn.textContent = 'Kész vagyok';
           readyBtn.classList.remove('ready');
         }
@@ -644,21 +819,21 @@ const Game = {
         } else {
           console.log('DEBUG: Using fallback local updatePlayerList');
           // Fallback to local updatePlayerList
-          window.updatePlayerList(currentPlayers);
-          
+        window.updatePlayerList(currentPlayers);
+        
           // Manually update start button for offline mode
           const startBtn = document.getElementById('start-game-button');
           console.log('DEBUG: startBtn found:', !!startBtn);
           console.log('DEBUG: startBtn disabled before:', startBtn ? startBtn.disabled : 'N/A');
           
           if (startBtn) {
-            if (window.isReady) {
-              startBtn.disabled = false;
-              startBtn.textContent = 'Játék indítása';
+        if (window.isReady) {
+          startBtn.disabled = false;
+          startBtn.textContent = 'Játék indítása';
               console.log('DEBUG: Start button ENABLED');
-            } else {
-              startBtn.disabled = true;
-              startBtn.textContent = 'Játék indítása (várj hogy mindenki kész legyen)';
+        } else {
+          startBtn.disabled = true;
+          startBtn.textContent = 'Játék indítása (várj hogy mindenki kész legyen)';
               console.log('DEBUG: Start button DISABLED');
             }
             console.log('DEBUG: startBtn disabled after:', startBtn.disabled);
@@ -671,6 +846,33 @@ const Game = {
       
       // Add ready button event listener
       document.getElementById('ready-button').addEventListener('click', window.toggleReady);
+      
+      // Setup volume controls
+      window.setupVolumeControls = function() {
+        // Music volume control
+        const musicSlider = document.getElementById('music-volume-slider');
+        const musicDisplay = document.getElementById('music-volume-display');
+        
+        if (musicSlider && musicDisplay && window.Audio) {
+          // Set initial value from Audio system
+          const currentMusicVolume = Math.round(window.Audio.getMusicVolume() * 100);
+          musicSlider.value = currentMusicVolume;
+          musicDisplay.textContent = currentMusicVolume + '%';
+          
+          // Add event listener for music volume changes
+          musicSlider.addEventListener('input', (e) => {
+            const volume = parseInt(e.target.value) / 100;
+            window.Audio.setMusicVolume(volume);
+            musicDisplay.textContent = e.target.value + '%';
+            console.log('Music volume changed to:', volume);
+          });
+        }
+      };
+      
+      // Initialize volume controls after a short delay
+      setTimeout(() => {
+        window.setupVolumeControls();
+      }, 100);
       
       // Role setting function for testing
       window.setTestRole = function(role, groupColor) {
@@ -742,8 +944,13 @@ const Game = {
       };
       
       window.startGame = function() {
-        console.log('DEBUG: startGame called');
-        console.log('DEBUG: window.allPlayersReady:', window.allPlayersReady);
+        console.log('DEBUG: startGame called - FORCING OFFLINE MODE');
+        
+        // Stop lobby music when game starts
+        if (window.Audio && window.Audio.stopLobbyMusic) {
+          console.log("Stopping lobby music from startGame");
+          window.Audio.stopLobbyMusic();
+        }
         
         if (!window.allPlayersReady) {
           console.log('DEBUG: Not all players ready, showing alert');
@@ -751,7 +958,13 @@ const Game = {
           return;
         }
         
-        console.log('DEBUG: All players ready, starting game');
+        console.log('DEBUG: STARTING OFFLINE GAME DIRECTLY');
+        // ALWAYS start offline mode - bypass all socket checks
+        startGameLocally();
+      };
+      
+      // Move the existing game start logic to a separate function
+      function startGameLocally() {
         try {
           console.log('Starting game with character:', window.selectedCharacter || 'male1');
           
@@ -847,6 +1060,7 @@ const Game = {
             <canvas id="game-canvas"></canvas>
             <div id="role-indicator">Betöltés...</div>
             <div id="fullscreen-hint">F11 - Full screen [on/off]</div>
+            
             <div class="action-buttons">
               <button id="infect-button" class="action-button" style="display: none;">
                 <span class="action-icon">🦠</span>
@@ -914,7 +1128,7 @@ const Game = {
                   roleText = 'Pestis-Nemes';
                 } else if (role === 'plague-commoner') {
                   roleText = 'Pestis-Polgár';
-                } else {
+      } else {
                   roleText = role || 'Ismeretlen';
                 }
                 
@@ -936,6 +1150,11 @@ const Game = {
               if (window.Animation && window.Animation.init) {
                 window.Animation.init(window.Game.character);
                 console.log('Animation initialized with character:', window.Game.character);
+              }
+              if (typeof NPC !== 'undefined') {
+                NPC.init(); // Initialize NPCs
+                window.NPC = NPC; // Make sure NPC is globally accessible
+                console.log("NPC made globally accessible:", !!window.NPC);
               }
               
               console.log('Current game state:', {
@@ -974,6 +1193,13 @@ const Game = {
                   } else if (window.Map && window.Map.draw) {
                     window.Map.draw();
                   }
+                  
+                  // Draw NPCs (after map, before player)
+                  if (window.NPC && window.NPC.draw) {
+                    console.log("Drawing NPCs in gameLoop");
+                    window.NPC.draw();
+                  }
+                  
                   if (window.Player && window.Player.draw) window.Player.draw();
                   requestAnimationFrame(gameLoop);
                 } catch (error) {
@@ -1124,7 +1350,7 @@ const Game = {
       const startButton = document.getElementById('start-game-button');
       if (startButton) {
         startButton.style.display = 'none';
-      }
+    }
     }, 100);
   },
   
@@ -1149,6 +1375,15 @@ const Game = {
   
   handleGameStarted() {
     console.log('Game started');
+    
+    // Stop lobby music when game starts
+    if (window.Audio && window.Audio.stopLobbyMusic) {
+      console.log("Stopping lobby music - game started");
+      window.Audio.stopLobbyMusic();
+    }
+    
+    // Clear lobby body classes
+    document.body.className = '';
     
     // TELJES OLDAL RESET JÁTÉKRA
     document.body.innerHTML = `
@@ -1230,6 +1465,126 @@ const Game = {
           text-align: center;
           white-space: nowrap;
         }
+        
+        
+        
+        
+        
+        /* Pause Menu Styles */
+        .pause-menu-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background: rgba(0, 0, 0, 0.8);
+          z-index: 2000;
+          display: none;
+          justify-content: center;
+          align-items: center;
+        }
+        .pause-menu {
+          background: #1a0000;
+          border: 3px solid #8b0000;
+          border-radius: 10px;
+          padding: 30px;
+          min-width: 400px;
+          max-width: 500px;
+          text-align: center;
+          box-shadow: 0 0 30px rgba(139, 0, 0, 0.7);
+        }
+        .pause-menu h2 {
+          color: #8b0000;
+          font-family: 'MedievalSharp', serif;
+          font-size: 24px;
+          margin-bottom: 25px;
+          margin-top: 0;
+        }
+        .pause-menu-section {
+          margin-bottom: 20px;
+          padding: 15px;
+          border: 1px solid #8b0000;
+          border-radius: 5px;
+          background: rgba(26, 0, 0, 0.5);
+        }
+        .pause-menu-section h3 {
+          color: #8b0000;
+          font-family: 'MedievalSharp', serif;
+          font-size: 16px;
+          margin-bottom: 15px;
+          margin-top: 0;
+        }
+        .pause-volume-control {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 10px;
+        }
+        .pause-volume-control label {
+          color: #8b0000;
+          font-family: 'MedievalSharp', serif;
+          font-size: 14px;
+          flex: 1;
+          text-align: left;
+        }
+        .pause-volume-control input[type="range"] {
+          flex: 2;
+          margin: 0 10px;
+          accent-color: #8b0000;
+        }
+        .pause-volume-control span {
+          color: #8b0000;
+          font-family: 'MedievalSharp', serif;
+          font-size: 12px;
+          width: 40px;
+          text-align: right;
+        }
+        .pause-menu-buttons {
+          display: flex;
+          gap: 15px;
+          justify-content: center;
+          margin-top: 25px;
+        }
+        .pause-menu-button {
+          background: #1a0000;
+          color: #8b0000;
+          border: 2px solid #8b0000;
+          padding: 12px 20px;
+          font-family: 'MedievalSharp', serif;
+          font-size: 14px;
+          border-radius: 5px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+        .pause-menu-button:hover {
+          background: #8b0000;
+          color: #1a0000;
+        }
+        .fullscreen-toggle {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .fullscreen-toggle label {
+          color: #8b0000;
+          font-family: 'MedievalSharp', serif;
+          font-size: 14px;
+        }
+        .fullscreen-toggle button {
+          background: #1a0000;
+          color: #8b0000;
+          border: 2px solid #8b0000;
+          padding: 8px 16px;
+          font-family: 'MedievalSharp', serif;
+          font-size: 12px;
+          border-radius: 3px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+        .fullscreen-toggle button:hover {
+          background: #8b0000;
+          color: #1a0000;
+        }
       </style>
       
       <div id="game-screen" style="display: flex;">
@@ -1238,6 +1593,49 @@ const Game = {
           <div class="role-display"></div>
           <div class="timer-display"></div>
           <div class="mini-map"></div>
+          
+          <!-- Pause Menu -->
+          <div id="pause-menu-overlay" class="pause-menu-overlay">
+            <div class="pause-menu">
+              <h2>Szünet</h2>
+              
+              <!-- Volume Controls Section -->
+              <div class="pause-menu-section">
+                <h3>Hangerő beállítások</h3>
+                <div class="pause-volume-control">
+                  <label>Zene hangerő:</label>
+                  <input type="range" id="pause-music-volume-slider" min="0" max="100" value="40">
+                  <span id="pause-music-volume-display">40%</span>
+                </div>
+                <div class="pause-volume-control">
+                  <label>Hangeffektek:</label>
+                  <input type="range" id="pause-sfx-volume-slider" min="0" max="100" value="70">
+                  <span id="pause-sfx-volume-display">70%</span>
+                </div>
+              </div>
+              
+              <!-- Fullscreen Section -->
+              <div class="pause-menu-section">
+                <h3>Képernyő beállítások</h3>
+                <div class="fullscreen-toggle">
+                  <label>Teljes képernyő:</label>
+                  <button id="fullscreen-toggle-btn" onclick="window.toggleFullscreen()">Váltás</button>
+                </div>
+              </div>
+              
+              <!-- Menu Buttons -->
+              <div class="pause-menu-buttons">
+                <button class="pause-menu-button" onclick="window.resumeGame()">Folytatás</button>
+                <button class="pause-menu-button" onclick="window.leaveGame()">Kilépés</button>
+              </div>
+            </div>
+          </div>
+            <div class="volume-control-item">
+              <label>Hangeffektek</label>
+              <input type="range" id="online-sfx-volume-slider" min="0" max="100" value="70">
+              <span id="online-sfx-volume-display">70%</span>
+            </div>
+          </div>
           
           <!-- Action Buttons -->
           <div class="action-buttons">
@@ -1269,12 +1667,205 @@ const Game = {
       if (typeof Map !== 'undefined') Map.init();
       if (typeof Player !== 'undefined') Player.init();
       if (typeof Animation !== 'undefined') Animation.init(this.character);
+      if (typeof NPC !== 'undefined') {
+        NPC.init(); // Initialize NPCs
+        window.NPC = NPC; // Make sure NPC is globally accessible
+        console.log("NPC made globally accessible:", !!window.NPC);
+      }
     } catch (e) {
       console.error("Error initializing game components:", e);
     }
     
     // Start the game loop
     this.gameLoop();
+    
+    // Setup volume controls for online game
+    setTimeout(() => {
+      this.setupOnlineVolumeControls();
+    }, 100);
+    
+    // Add pause menu functionality for online game
+    window.isPaused = false;
+    
+    // Pause menu functions
+    window.showPauseMenu = function() {
+      console.log('Showing pause menu');
+      window.isPaused = true;
+      const pauseOverlay = document.getElementById('pause-menu-overlay');
+      if (pauseOverlay) {
+        pauseOverlay.style.display = 'flex';
+        
+        // Initialize pause menu volume controls with current values
+        if (window.Audio) {
+          // Music volume
+          const pauseMusicSlider = document.getElementById('pause-music-volume-slider');
+          const pauseMusicDisplay = document.getElementById('pause-music-volume-display');
+          if (pauseMusicSlider && pauseMusicDisplay) {
+            const currentMusicVolume = Math.round(window.Audio.getMusicVolume() * 100);
+            pauseMusicSlider.value = currentMusicVolume;
+            pauseMusicDisplay.textContent = currentMusicVolume + '%';
+          }
+          
+          // SFX volume
+          const pauseSfxSlider = document.getElementById('pause-sfx-volume-slider');
+          const pauseSfxDisplay = document.getElementById('pause-sfx-volume-display');
+          if (pauseSfxSlider && pauseSfxDisplay) {
+            const currentSfxVolume = Math.round(window.Audio.getSoundEffectsVolume() * 100);
+            pauseSfxSlider.value = currentSfxVolume;
+            pauseSfxDisplay.textContent = currentSfxVolume + '%';
+          }
+        }
+      }
+    };
+    
+    window.hidePauseMenu = function() {
+      console.log('Hiding pause menu');
+      window.isPaused = false;
+      const pauseOverlay = document.getElementById('pause-menu-overlay');
+      if (pauseOverlay) {
+        pauseOverlay.style.display = 'none';
+      }
+    };
+    
+    window.resumeGame = function() {
+      window.hidePauseMenu();
+    };
+    
+    window.leaveGame = function() {
+      const confirmLeave = confirm('Biztosan ki akarsz lépni a játékból?');
+      if (confirmLeave) {
+        // Disconnect from socket if connected
+        if (SocketConnector && SocketConnector.isSocketConnected()) {
+          SocketConnector.disconnect();
+        }
+        
+        // Reload the page to go back to main menu
+        window.location.reload();
+      }
+    };
+    
+    window.toggleFullscreen = function() {
+      if (!document.fullscreenElement) {
+        // Enter fullscreen
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen();
+        } else if (document.documentElement.webkitRequestFullscreen) {
+          document.documentElement.webkitRequestFullscreen();
+        } else if (document.documentElement.msRequestFullscreen) {
+          document.documentElement.msRequestFullscreen();
+        }
+      } else {
+        // Exit fullscreen
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        }
+      }
+    };
+    
+    // Setup pause menu volume controls for online game
+    const setupOnlinePauseVolumeControls = () => {
+      // Music volume control
+      const pauseMusicSlider = document.getElementById('pause-music-volume-slider');
+      const pauseMusicDisplay = document.getElementById('pause-music-volume-display');
+      
+      if (pauseMusicSlider && pauseMusicDisplay && window.Audio) {
+        pauseMusicSlider.addEventListener('input', (e) => {
+          const volume = parseInt(e.target.value) / 100;
+          window.Audio.setMusicVolume(volume);
+          pauseMusicDisplay.textContent = e.target.value + '%';
+          
+          // Also update other volume displays
+          const gameMusicDisplay = document.getElementById('online-music-volume-display');
+          if (gameMusicDisplay) gameMusicDisplay.textContent = e.target.value + '%';
+          const gameMusicSlider = document.getElementById('online-music-volume-slider');
+          if (gameMusicSlider) gameMusicSlider.value = e.target.value;
+        });
+      }
+      
+      // SFX volume control
+      const pauseSfxSlider = document.getElementById('pause-sfx-volume-slider');
+      const pauseSfxDisplay = document.getElementById('pause-sfx-volume-display');
+      
+      if (pauseSfxSlider && pauseSfxDisplay && window.Audio) {
+        pauseSfxSlider.addEventListener('input', (e) => {
+          const volume = parseInt(e.target.value) / 100;
+          window.Audio.setSoundEffectsVolume(volume);
+          pauseSfxDisplay.textContent = e.target.value + '%';
+          
+          // Also update other volume displays
+          const gameSfxDisplay = document.getElementById('online-sfx-volume-display');
+          if (gameSfxDisplay) gameSfxDisplay.textContent = e.target.value + '%';
+          const gameSfxSlider = document.getElementById('online-sfx-volume-slider');
+          if (gameSfxSlider) gameSfxSlider.value = e.target.value;
+        });
+      }
+    };
+    
+    // Setup pause menu controls
+    setTimeout(() => {
+      setupOnlinePauseVolumeControls();
+    }, 100);
+    
+    // Keyboard event handler for pause menu
+    window.handleOnlineGameKeydown = function(event) {
+      if (event.code === 'KeyP') {
+        event.preventDefault();
+        if (window.isPaused) {
+          window.hidePauseMenu();
+        } else {
+          window.showPauseMenu();
+        }
+      } else if (event.code === 'Escape' && window.isPaused) {
+        event.preventDefault();
+        window.hidePauseMenu();
+      }
+    };
+    
+    // Add keyboard event listener
+    document.addEventListener('keydown', window.handleOnlineGameKeydown);
+  },
+  
+  // Setup volume controls for online game mode
+  setupOnlineVolumeControls() {
+    // Music volume control
+    const musicSlider = document.getElementById('online-music-volume-slider');
+    const musicDisplay = document.getElementById('online-music-volume-display');
+    
+    // Sound effects volume control
+    const sfxSlider = document.getElementById('online-sfx-volume-slider');
+    const sfxDisplay = document.getElementById('online-sfx-volume-display');
+    
+    if (window.Audio) {
+      // Initialize music controls
+      if (musicSlider && musicDisplay) {
+        const currentMusicVolume = Math.round(window.Audio.getMusicVolume() * 100);
+        musicSlider.value = currentMusicVolume;
+        musicDisplay.textContent = currentMusicVolume + '%';
+        
+        musicSlider.addEventListener('input', (e) => {
+          const volume = parseInt(e.target.value) / 100;
+          window.Audio.setMusicVolume(volume);
+          musicDisplay.textContent = e.target.value + '%';
+        });
+      }
+      
+      // Initialize sound effects controls
+      if (sfxSlider && sfxDisplay) {
+        const currentSfxVolume = Math.round(window.Audio.getSoundEffectsVolume() * 100);
+        sfxSlider.value = currentSfxVolume;
+        sfxDisplay.textContent = currentSfxVolume + '%';
+        
+        sfxSlider.addEventListener('input', (e) => {
+          const volume = parseInt(e.target.value) / 100;
+          window.Audio.setSoundEffectsVolume(volume);
+          sfxDisplay.textContent = e.target.value + '%';
+        });
+      }
+    }
   },
   
   handleRoleAssigned(roleInfo) {
@@ -1348,6 +1939,23 @@ const Game = {
     
     // Show the discussion screen
     UI.showScreen('discussion-screen');
+  },
+  
+  handleRoundEnded(roundData) {
+    console.log('Round ended:', roundData);
+    
+    // Clear round timer
+    if (this.roundTimer) {
+      clearInterval(this.roundTimer);
+      this.roundTimer = null;       
+    }
+    
+    // Reset round-specific state
+    this.currentRound = null;
+    this.roundTimerValue = 0;
+    
+    // Update UI
+    UI.hideScreen('game-screen');
   },
   
   handleActionsCooldown() {
@@ -1454,11 +2062,24 @@ const Game = {
   
   // Render the game
   render() {
+    console.log("render() called");
+    
     // Clear the canvas and draw the map (Map kezeli a kamerát is)
     if (window.Map && window.Map.draw && window.Player) {
       window.Map.draw(window.Player.x, window.Player.y);
     } else if (window.Map && window.Map.draw) {
       window.Map.draw();
+    }
+    
+    // Draw NPCs (after map, before players)
+    if (window.NPC && window.NPC.draw) {
+      console.log("Drawing NPCs in render");
+      window.NPC.draw();
+    } else {
+      console.log("NPC or NPC.draw not available:", {
+        npcExists: !!window.NPC,
+        drawExists: !!(window.NPC && window.NPC.draw)
+      });
     }
     
     // Draw other players first (so they appear behind our player)

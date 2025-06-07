@@ -5,6 +5,7 @@ import Map from './map.js';
 import Player from './player.js';
 import Animation from './animation.js';
 import Audio from './audio.js';
+import NPC from './npc.js';
 
 // Wait for DOM to load
 window.addEventListener('DOMContentLoaded', () => {
@@ -125,10 +126,36 @@ window.addEventListener('DOMContentLoaded', () => {
     Map.init(); // Először a Map, hogy beállítsa a scaling értékeket
     Audio.init(); // Audio rendszer inicializálása
     Player.init(); // Utána a Player, hogy használhassa a scaling értékeket
+    NPC.init(); // Initialize NPCs early so they're available
     await Game.init(); // Game.init most async, várjuk meg
     
-    // Make Audio available globally for Player
+    // Make modules available globally
     window.Audio = Audio;
+    window.NPC = NPC;
+    
+    // Setup main menu volume controls
+    setupMainMenuVolumeControls();
+  }
+  
+  // Setup main menu volume controls
+  function setupMainMenuVolumeControls() {
+    const musicSlider = document.getElementById('main-menu-music-volume-slider');
+    const musicDisplay = document.getElementById('main-menu-music-volume-display');
+    
+    if (musicSlider && musicDisplay && window.Audio) {
+      // Set initial value from Audio system
+      const currentMusicVolume = Math.round(window.Audio.getMusicVolume() * 100);
+      musicSlider.value = currentMusicVolume;
+      musicDisplay.textContent = currentMusicVolume + '%';
+      
+      // Add event listener for music volume changes
+      musicSlider.addEventListener('input', (e) => {
+        const volume = parseInt(e.target.value) / 100;
+        window.Audio.setMusicVolume(volume);
+        musicDisplay.textContent = e.target.value + '%';
+        console.log('Main menu music volume changed to:', volume);
+      });
+    }
   }
   
   // Start initialization

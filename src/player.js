@@ -5,7 +5,7 @@ import Audio from './audio.js';
 
 const Player = {
   x: 960, // Alapértelmezett pozíció (az init() skálázza majd)
-  y: 850, // Alapértelmezett pozíció lejjebb a padló magasságában
+  y: 898, // Karakter pozíció 12 pixellel feljebb
   isMoving: false,
   direction: 'right', // 'left' vagy 'right'
   animationFrame: 0,
@@ -16,7 +16,7 @@ const Player = {
   // Segédfüggvény a padló pozíció kiszámításához
   getFloorY() {
     const scaleY = window.Map ? window.Map.scaleY : 1;
-    return 850 * scaleY; // Lejjebb a kék szoba gyémánt padlójának magasságához igazítva, skálázva
+    return 898 * scaleY; // Karakter pozíció 12 pixellel feljebb
   },
 
   init() {

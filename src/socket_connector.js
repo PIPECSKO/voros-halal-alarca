@@ -292,6 +292,23 @@ const SocketConnector = {
     this.updateConnectionStatusUI('connecting', 'Újracsatlakozás...');
     this.socket.disconnect();
     this.socket.connect();
+  },
+  
+  /**
+   * Disconnect from the server
+   */
+  disconnect() {
+    if (!this.socket) return;
+    
+    console.log("Disconnecting from server...");
+    this.isConnected = false;
+    
+    try {
+      this.socket.disconnect();
+      this.updateConnectionStatusUI('disconnected', 'Kapcsolat bontva');
+    } catch (error) {
+      console.error("Error during disconnect:", error);
+    }
   }
 };
 
