@@ -68,6 +68,11 @@ app.get('/connection-test', (req, res) => {
   res.sendFile(path.join(__dirname, '../test_join.html'));
 });
 
+// Add a route for the speed test
+app.get('/test_connection_speed.html', (req, res) => {
+  res.sendFile(path.join(__dirname, '../test_connection_speed.html'));
+});
+
 // Handle socket connections
 io.on('connection', (socket) => {
   console.log(`New client connected: ${socket.id} at ${new Date().toISOString()}`);
@@ -379,9 +384,10 @@ io.on('connection', (socket) => {
     // Client is still connected and responsive
     socket.lastHeartbeat = new Date();
     
-    // Calculate latency if client sent timestamp
+          // Calculate round-trip latency if client sent timestamp
     if (data && data.clientTime) {
-      const latency = Date.now() - data.clientTime;
+      const roundTripTime = Date.now() - data.clientTime;
+      const latency = Math.round(roundTripTime / 2); // Half of round-trip = one-way latency
       socket.latency = latency;
       console.log(`Client ${socket.id} latency: ${latency}ms`);
     }

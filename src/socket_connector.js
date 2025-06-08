@@ -106,7 +106,8 @@ const SocketConnector = {
         // Calculate and display latency if we have server time
         if (data && data.serverTime) {
           const serverTime = new Date(data.serverTime).getTime();
-          const latency = Math.abs(clientTime - serverTime);
+          const roundTripTime = Math.abs(clientTime - serverTime);
+          const latency = Math.round(roundTripTime / 2); // Half of round-trip = one-way latency
           this.lastLatency = latency;
           
           // Update UI with latency info
