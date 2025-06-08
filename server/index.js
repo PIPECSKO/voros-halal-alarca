@@ -26,18 +26,16 @@ const io = socketIO(server, {
     allowedHeaders: ['Content-Type'],
     credentials: false
   },
-  connectTimeout: 30000,
-  pingTimeout: 20000,
-  pingInterval: 5000,
-  upgradeTimeout: 20000,
+  connectTimeout: 10000,      // Csökkentett timeout
+  pingTimeout: 10000,         // Gyorsabb ping timeout
+  pingInterval: 2000,         // Gyakoribb ping check
+  upgradeTimeout: 10000,      // Gyorsabb upgrade
   transports: ['websocket', 'polling'],
   allowUpgrades: true,
-  perMessageDeflate: {
-    threshold: 512
-  },
-  maxHttpBufferSize: 5e5,
-  compression: true,
-  httpCompression: true,
+  perMessageDeflate: false,   // Kikapcsolt tömörítés a sebesség érdekében
+  maxHttpBufferSize: 1e5,     // Kisebb buffer méret
+  compression: false,         // Kikapcsolt kompresszió
+  httpCompression: false,     // Kikapcsolt HTTP kompresszió
   cookie: false,
   serveClient: false
 });
