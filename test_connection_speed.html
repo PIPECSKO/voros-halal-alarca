@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connection Speed Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a0000;
+            color: #fff;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .good { background: #2d5a2d; }
+        .warning { background: #5a5a2d; }
+        .bad { background: #5a2d2d; }
+        button {
+            background: #8b0000;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #a00000;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-box {
+            background: rgba(139, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .ping-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        #log {
+            background: #000;
+            padding: 15px;
+            border-radius: 5px;
+            height: 300px;
+            overflow-y: scroll;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌐 Railway Server Connection Test</h1>
+    
+    <div class="stats">
+        <div class="stat-box">
+            <div>Jelenlegi Ping</div>
+            <div class="ping-value" id="current-ping">-</div>
+        </div>
+        <div class="stat-box">
+            <div>Átlag Ping</div>
+            <div class="ping-value" id="average-ping">-</div>
+        </div>
+        <div class="stat-box">
+            <div>Legalacsonyabb</div>
+            <div class="ping-value" id="min-ping">-</div>
+        </div>
+        <div class="stat-box">
+            <div>Legmagasabb</div>
+            <div class="ping-value" id="max-ping">-</div>
+        </div>
+    </div>
+
+    <button onclick="startTest()">🚀 Ping Test Indítása</button>
+    <button onclick="stopTest()">⏹️ Stop</button>
+    <button onclick="clearLog()">🗑️ Log törlés</button>
+    
+    <h3>📊 Eredmények:</h3>
+    <div id="results"></div>
+    
+    <h3>📝 Log:</h3>
+    <div id="log"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let socket = null;
+        let isTestRunning = false;
+        let testInterval = null;
+        let pingHistory = [];
+        
+        // Railway URL - automatikusan érzékeli a domain-t
+        const SERVER_URL = window.location.origin;
+        
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${time}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function updateStats() {
+            if (pingHistory.length === 0) return;
+            
+            const current = pingHistory[pingHistory.length - 1];
+            const average = Math.round(pingHistory.reduce((a, b) => a + b, 0) / pingHistory.length);
+            const min = Math.min(...pingHistory);
+            const max = Math.max(...pingHistory);
+            
+            document.getElementById('current-ping').textContent = current + 'ms';
+            document.getElementById('average-ping').textContent = average + 'ms';
+            document.getElementById('min-ping').textContent = min + 'ms';
+            document.getElementById('max-ping').textContent = max + 'ms';
+            
+            // Színezés ping alapján
+            const currentElement = document.getElementById('current-ping');
+            if (current < 100) currentElement.style.color = '#4CAF50';
+            else if (current < 200) currentElement.style.color = '#FF9800';
+            else currentElement.style.color = '#F44336';
+        }
+        
+        function showResult(ping) {
+            const resultsDiv = document.getElementById('results');
+            let resultClass = 'good';
+            let status = 'Kiváló';
+            
+            if (ping > 200) {
+                resultClass = 'bad';
+                status = 'Rossz';
+            } else if (ping > 100) {
+                resultClass = 'warning';  
+                status = 'Közepes';
+            }
+            
+            const resultHTML = `
+                <div class="test-result ${resultClass}">
+                    <strong>Ping: ${ping}ms</strong> - ${status}
+                    <br>Idő: ${new Date().toLocaleTimeString()}
+                </div>
+            `;
+            
+            resultsDiv.innerHTML = resultHTML + resultsDiv.innerHTML;
+        }
+        
+        function connectToServer() {
+            log(`🔌 Csatlakozás a szerverhez: ${SERVER_URL}`);
+            
+            socket = io(SERVER_URL, {
+                transports: ['websocket', 'polling'],
+                timeout: 5000,
+                forceNew: true
+            });
+            
+            socket.on('connect', () => {
+                log('✅ Sikeresen csatlakozva a szerverhez!');
+                log(`📡 Transport: ${socket.io.engine.transport.name}`);
+                log(`🆔 Socket ID: ${socket.id}`);
+            });
+            
+            socket.on('disconnect', (reason) => {
+                log(`❌ Kapcsolat megszakadt: ${reason}`);
+                stopTest();
+            });
+            
+            socket.on('connect_error', (error) => {
+                log(`❌ Kapcsolódási hiba: ${error.message}`);
+            });
+            
+            return new Promise((resolve) => {
+                socket.on('connect', () => resolve(socket));
+            });
+        }
+        
+        function measurePing() {
+            return new Promise((resolve) => {
+                const startTime = Date.now();
+                
+                socket.emit('ping', { timestamp: startTime }, () => {
+                    const endTime = Date.now();
+                    const ping = endTime - startTime;
+                    resolve(ping);
+                });
+            });
+        }
+        
+        async function startTest() {
+            if (isTestRunning) return;
+            
+            isTestRunning = true;
+            pingHistory = [];
+            
+            log('🚀 Ping teszt indítása...');
+            
+            try {
+                if (!socket || !socket.connected) {
+                    await connectToServer();
+                }
+                
+                testInterval = setInterval(async () => {
+                    try {
+                        const ping = await measurePing();
+                        pingHistory.push(ping);
+                        
+                        log(`📡 Ping: ${ping}ms`);
+                        showResult(ping);
+                        updateStats();
+                        
+                        // Csak az utolsó 20 pingot tartjuk meg
+                        if (pingHistory.length > 20) {
+                            pingHistory = pingHistory.slice(-20);
+                        }
+                        
+                    } catch (error) {
+                        log(`❌ Ping mérési hiba: ${error.message}`);
+                    }
+                }, 1000); // Minden másodpercben
+                
+            } catch (error) {
+                log(`❌ Teszt indítási hiba: ${error.message}`);
+                isTestRunning = false;
+            }
+        }
+        
+        function stopTest() {
+            isTestRunning = false;
+            if (testInterval) {
+                clearInterval(testInterval);
+                testInterval = null;
+            }
+            log('⏹️ Ping teszt leállítva');
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+            document.getElementById('results').innerHTML = '';
+            pingHistory = [];
+            updateStats();
+        }
+        
+        // Automatikus indítás az oldal betöltésekor
+        window.addEventListener('load', () => {
+            log('🌐 Connection Speed Test betöltve');
+            log(`🎯 Szerver: ${SERVER_URL}`);
+        });
+    </script>
+</body>
+</html> 
