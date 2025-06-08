@@ -329,6 +329,72 @@ const Map = {
     
     // Reset text alignment
     this.ctx.textAlign = 'left';
+    
+    // Draw task list below minimap (shorter width, better readability)
+    this.drawTaskList(minimapX + 20, minimapY + minimapHeight + 10, minimapWidth - 40);
+  },
+  
+  // Draw task list below minimap
+  drawTaskList(x, y, width) {
+    if (!window.TaskBar) return;
+    
+    const tasks = window.TaskBar.getTaskList();
+    const taskHeight = 24; // Increased spacing between tasks
+    const titleHeight = 28; // More space for title + margin
+    const padding = 10; // Increased padding
+    const totalHeight = tasks.length * taskHeight + titleHeight + (padding * 2);
+    
+    // Background
+    this.ctx.fillStyle = 'rgba(26, 0, 0, 0.9)';
+    this.ctx.fillRect(x, y, width, totalHeight);
+    
+    // Border
+    this.ctx.strokeStyle = '#8b0000';
+    this.ctx.lineWidth = 2;
+    this.ctx.strokeRect(x, y, width, totalHeight);
+    
+    // Title
+    this.ctx.fillStyle = '#FFD700';
+    this.ctx.font = '15px MedievalSharp'; // Slightly increased font size
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText('FELADATOK', x + width / 2, y + 18);
+    
+    // Task list
+    this.ctx.textAlign = 'left';
+    this.ctx.font = '12px MedievalSharp'; // Increased font size
+    
+    tasks.forEach((task, index) => {
+      const taskY = y + titleHeight + padding + (index * taskHeight);
+      
+      // Task status color
+      if (task.completed) {
+        this.ctx.fillStyle = '#888888'; // Gray for completed
+      } else if (window.TaskBar.currentTask && window.TaskBar.currentTask.id === task.id) {
+        this.ctx.fillStyle = '#00ff00'; // Green for current task
+      } else {
+        this.ctx.fillStyle = '#ffffff'; // White for pending
+      }
+      
+      // Task status symbol
+      const statusSymbol = task.completed ? '✅' : '◯';
+      this.ctx.fillText(statusSymbol, x + 8, taskY);
+      
+      // Task name
+      this.ctx.fillText(task.name, x + 28, taskY);
+      
+      // Strike-through for completed tasks
+      if (task.completed) {
+        this.ctx.strokeStyle = '#888888';
+        this.ctx.lineWidth = 1;
+        this.ctx.beginPath();
+        this.ctx.moveTo(x + 28, taskY - 4);
+        this.ctx.lineTo(x + width - 8, taskY - 4);
+        this.ctx.stroke();
+      }
+    });
+    
+    // Reset text alignment
+    this.ctx.textAlign = 'left';
   },
   
   // Get room ID from world position

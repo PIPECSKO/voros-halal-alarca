@@ -14,6 +14,7 @@ const Audio = {
   // Volume controls
   soundEffectsVolume: 0.7, // Default volume for sound effects
   musicVolume: 0.4, // Default volume for music
+  soundEffectsEnabled: true, // Enable sound effects by default
   
   // Initialize audio system
   init() {
@@ -41,15 +42,65 @@ const Audio = {
     this.sounds.step1 = new window.Audio('assets/sounds/step1.mp3');
     this.sounds.step2 = new window.Audio('assets/sounds/step2.mp3');
     
+    // Load sword swing sounds
+    console.log("Loading sword sounds...");
+    this.sounds.sword1 = new window.Audio('assets/sounds/sword/sword1.mp3');
+    this.sounds.sword2 = new window.Audio('assets/sounds/sword/sword2.mp3');
+    
+    // Load task sounds
+    console.log("Loading task sounds...");
+    this.sounds.eating = new window.Audio('assets/sounds/task/eating.mp3');
+    this.sounds.poker = new window.Audio('assets/sounds/task/poker.mp3');
+    
     // Set volume for footsteps
     this.sounds.step1.volume = this.soundEffectsVolume * 0.3; // 30% of current SFX volume
     this.sounds.step2.volume = this.soundEffectsVolume * 0.3;
     
+    // Set volume for sword sounds
+    this.sounds.sword1.volume = this.soundEffectsVolume * 0.6; // 60% of current SFX volume for impact
+    this.sounds.sword2.volume = this.soundEffectsVolume * 0.6;
+    
+    // Set volume for task sounds
+    this.sounds.eating.volume = this.soundEffectsVolume * 0.4; // 40% of current SFX volume
+    this.sounds.poker.volume = this.soundEffectsVolume * 0.4;
+    
     // Preload sounds
     this.sounds.step1.preload = 'auto';
     this.sounds.step2.preload = 'auto';
+    this.sounds.sword1.preload = 'auto';
+    this.sounds.sword2.preload = 'auto';
+    this.sounds.eating.preload = 'auto';
+    this.sounds.poker.preload = 'auto';
     
-    console.log("Audio sounds loaded");
+    // Add load event listeners for debugging
+    this.sounds.sword1.addEventListener('canplaythrough', () => {
+      console.log("✓ sword1.mp3 loaded successfully");
+    });
+    this.sounds.sword2.addEventListener('canplaythrough', () => {
+      console.log("✓ sword2.mp3 loaded successfully");
+    });
+    this.sounds.eating.addEventListener('canplaythrough', () => {
+      console.log("✓ eating.mp3 loaded successfully");
+    });
+    this.sounds.poker.addEventListener('canplaythrough', () => {
+      console.log("✓ poker.mp3 loaded successfully");
+    });
+    
+    // Add error event listeners
+    this.sounds.sword1.addEventListener('error', (e) => {
+      console.error("✗ Error loading sword1.mp3:", e);
+    });
+    this.sounds.sword2.addEventListener('error', (e) => {
+      console.error("✗ Error loading sword2.mp3:", e);
+    });
+    this.sounds.eating.addEventListener('error', (e) => {
+      console.error("✗ Error loading eating.mp3:", e);
+    });
+    this.sounds.poker.addEventListener('error', (e) => {
+      console.error("✗ Error loading poker.mp3:", e);
+    });
+    
+    console.log("Audio sounds loaded (including sword and task sounds)");
   },
   
   // Load all music tracks
@@ -73,6 +124,8 @@ const Audio = {
     // Update existing sound volumes
     if (this.sounds.step1) this.sounds.step1.volume = this.soundEffectsVolume * 0.3;
     if (this.sounds.step2) this.sounds.step2.volume = this.soundEffectsVolume * 0.3;
+    if (this.sounds.sword1) this.sounds.sword1.volume = this.soundEffectsVolume * 0.6;
+    if (this.sounds.sword2) this.sounds.sword2.volume = this.soundEffectsVolume * 0.6;
     
     console.log("Sound effects volume set to:", this.soundEffectsVolume);
   },
@@ -113,6 +166,64 @@ const Audio = {
       this.currentFootstepIndex = (this.currentFootstepIndex + 1) % 2;
     } catch (error) {
       console.warn("Footstep sound play error:", error);
+    }
+  },
+  
+  // Play random sword swing sound
+  playSwordSwing() {
+    console.log("🎵 PlaySwordSwing called"); // Debug log
+    if (!this.soundEffectsEnabled) {
+      console.log("Sound effects disabled, skipping sword swing sound");
+      return;
+    }
+    
+    // Choose random sword sound (1 or 2)
+    const randomSound = Math.random() < 0.5 ? 'sword1' : 'sword2';
+    console.log(`Playing ${randomSound}.mp3`);
+    
+    if (this.sounds[randomSound]) {
+      this.sounds[randomSound].currentTime = 0; // Reset to beginning
+      this.sounds[randomSound].play().catch(e => {
+        console.error(`Error playing ${randomSound}:`, e);
+      });
+    } else {
+      console.error(`${randomSound} sound not loaded!`);
+    }
+  },
+  
+  // Play eating task sound
+  playEatingTask() {
+    console.log("🎵 PlayEatingTask called"); // Debug log
+    if (!this.soundEffectsEnabled) {
+      console.log("Sound effects disabled, skipping eating task sound");
+      return;
+    }
+    
+    if (this.sounds.eating) {
+      this.sounds.eating.currentTime = 0; // Reset to beginning
+      this.sounds.eating.play().catch(e => {
+        console.error("Error playing eating task sound:", e);
+      });
+    } else {
+      console.error("Eating task sound not loaded!");
+    }
+  },
+  
+  // Play poker task sound
+  playPokerTask() {
+    console.log("🎵 PlayPokerTask called"); // Debug log
+    if (!this.soundEffectsEnabled) {
+      console.log("Sound effects disabled, skipping poker task sound");
+      return;
+    }
+    
+    if (this.sounds.poker) {
+      this.sounds.poker.currentTime = 0; // Reset to beginning
+      this.sounds.poker.play().catch(e => {
+        console.error("Error playing poker task sound:", e);
+      });
+    } else {
+      console.error("Poker task sound not loaded!");
     }
   },
   
@@ -225,6 +336,20 @@ const Audio = {
     } catch (error) {
       console.warn("Stop lobby music error:", error);
     }
+  },
+  
+  // Update sound effects volume
+  updateSoundEffectsVolume(volume) {
+    this.soundEffectsVolume = volume;
+    // Update footstep volume
+    if (this.sounds.step1) this.sounds.step1.volume = volume * 0.3;
+    if (this.sounds.step2) this.sounds.step2.volume = volume * 0.3;
+    // Update sword sounds volume
+    if (this.sounds.sword1) this.sounds.sword1.volume = volume * 0.6;
+    if (this.sounds.sword2) this.sounds.sword2.volume = volume * 0.6;
+    // Update task sounds volume
+    if (this.sounds.eating) this.sounds.eating.volume = volume * 0.4;
+    if (this.sounds.poker) this.sounds.poker.volume = volume * 0.4;
   }
 };
 

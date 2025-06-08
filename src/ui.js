@@ -577,17 +577,28 @@ const UI = {
   
   // Handler for slash animation button
   handleSlashAction() {
-    console.log('Slash animation triggered for prince');
+    console.log('🗡️ Slash animation triggered for prince');
     console.log('Current character:', window.selectedCharacter);
     console.log('Current role:', window.Game ? window.Game.playerRole : 'No Game object');
     console.log('Animation object:', !!window.Animation);
+    console.log('Audio object:', !!window.Audio);
     
     // Check if character is prince (either by role or selected character)
     const isPrince = (window.selectedCharacter === 'prince') || 
                      (window.Game && window.Game.playerRole === 'prince') ||
                      (window.testRole === 'prince');
     
+    console.log('Is Prince?', isPrince);
+    
     if (window.Animation && isPrince) {
+      // Play sword swing sound
+      if (window.Audio) {
+        console.log('🔊 Attempting to play sword swing sound...');
+        window.Audio.playSwordSwing();
+      } else {
+        console.warn('❌ Audio object not available');
+      }
+      
       // Determine direction based on player's current direction
       const direction = (window.Player && window.Player.direction) || 'right';
       console.log('Playing slash animation in direction:', direction);
@@ -615,7 +626,10 @@ const UI = {
         { key: 'female1', img: 'assets/images/characters/females/female1/idle/female1_idle_facing_right1.png' },
         { key: 'female2', img: 'assets/images/characters/females/female2/idle/female2_idle_facing_right1.png' },
         { key: 'female3', img: 'assets/images/characters/females/female3/idle/female3_idle_facing_right1.png' },
-        { key: 'female4', img: 'assets/images/characters/females/female4/idle/female4_idle_facing_right1.png' }
+        { key: 'female4', img: 'assets/images/characters/females/female4/idle/female4_idle_facing_right1.png' },
+        { key: 'female7', img: 'assets/images/characters/females/female7/idle/female7_idle_facing_right1.png' },
+        { key: 'female8', img: 'assets/images/characters/females/female8/idle/female8_idle_facing_right1.png' },
+        { key: 'female9', img: 'assets/images/characters/females/female9/idle/female9_idle_facing_right1.png' }
       ]
     };
     // Alapértelmezett: egyik sem kiválasztva
@@ -680,3 +694,464 @@ const UI = {
 
 // Export the UI object
 export default UI; 
+
+// Task Bar System - Shows task zones at bottom of screen
+const TaskBar = {
+  // Task icons
+  taskIcons: {},
+  
+  // Initialize task icons
+  initTaskIcons() {
+    console.log("Loading task icons...");
+    
+    // Load eating icon
+    this.taskIcons.eating = new Image();
+    this.taskIcons.eating.src = 'assets/images/task/eating_icon.png';
+    this.taskIcons.eating.onload = () => {
+      console.log("✓ eating_icon.png loaded successfully");
+    };
+    this.taskIcons.eating.onerror = (e) => {
+      console.error("✗ Error loading eating_icon.png:", e);
+    };
+    
+    // Load poker icon
+    this.taskIcons.poker = new Image();
+    this.taskIcons.poker.src = 'assets/images/task/poker_icon.png';
+    this.taskIcons.poker.onload = () => {
+      console.log("✓ poker_icon.png loaded successfully");
+    };
+    this.taskIcons.poker.onerror = (e) => {
+      console.error("✗ Error loading poker_icon.png:", e);
+    };
+  },
+
+  // Task zone definitions for each room (x coordinates relative to room start)
+  taskZones: {
+    'green': { 
+      name: 'Kártyaasztal', 
+      startX: 600,  // Card table start position in room
+      endX: 1320,   // Card table end position in room
+      roomIndex: 4, // Green room is at index 4
+      id: 'cards'   // Unique task ID
+    },
+    'red': { 
+      name: 'Étkezőasztal', 
+      startX: 500,  // Dining table start position in room (slightly expanded)
+      endX: 1420,   // Dining table end position in room (slightly expanded)
+      roomIndex: 5, // Red room is at index 5
+      id: 'dining'  // Unique task ID
+    },
+    'blue': { 
+      name: 'Táncszőnyeg', 
+      startX: 600,  // Dance floor start position in room (expanded)
+      endX: 1320,   // Dance floor end position in room (expanded)
+      roomIndex: 6, // Blue room is at index 6
+      id: 'dancing' // Unique task ID
+    }
+  },
+
+  // Task completion tracking
+  completedTasks: new Set(), // Tasks completed in current round
+  currentRound: 1,
+
+    // Task state tracking
+  currentTask: null,
+  taskProgress: 0,
+  taskStartTime: 0,
+  taskDuration: 5000, // 5 seconds
+  
+  // Icon click detection
+  currentIconBounds: null,
+  currentIconHovered: false,
+  
+  // Handle icon hover
+  handleIconHover(mouseX, mouseY) {
+    if (!this.currentIconBounds) {
+      this.currentIconHovered = false;
+      return false;
+    }
+    
+    const bounds = this.currentIconBounds;
+    const hovered = mouseX >= bounds.x && 
+                   mouseX <= bounds.x + bounds.width &&
+                   mouseY >= bounds.y && 
+                   mouseY <= bounds.y + bounds.height;
+    
+    this.currentIconHovered = hovered;
+    return hovered;
+  },
+  
+  // Handle icon click
+  handleIconClick(mouseX, mouseY) {
+    if (!this.currentIconBounds) return false;
+    
+    const bounds = this.currentIconBounds;
+    const clicked = mouseX >= bounds.x && 
+                   mouseX <= bounds.x + bounds.width &&
+                   mouseY >= bounds.y && 
+                   mouseY <= bounds.y + bounds.height;
+    
+    if (clicked && bounds.taskZone) {
+      console.log('🖱️ Task icon clicked for:', bounds.taskZone.name);
+      this.startTask(bounds.taskZone);
+      return true;
+    }
+    
+    return false;
+  },
+
+  // Reset tasks for new round
+  resetTasks() {
+    this.completedTasks.clear();
+    this.currentRound++;
+    console.log(`🔄 Tasks reset for round ${this.currentRound}`);
+  },
+
+  // Check if task is completed
+  isTaskCompleted(taskId) {
+    return this.completedTasks.has(taskId);
+  },
+
+  // Get task list for display
+  getTaskList() {
+    return [
+      { id: 'cards', name: '🃏 Kártyaasztal', room: 'Zöld szoba', completed: this.isTaskCompleted('cards') },
+      { id: 'dining', name: '🍽️ Étkezőasztal', room: 'Piros szoba', completed: this.isTaskCompleted('dining') },
+      { id: 'dancing', name: '💃 Táncszőnyeg', room: 'Kék szoba', completed: this.isTaskCompleted('dancing') }
+    ];
+  },
+
+  // Start a task
+  startTask(taskZone) {
+    if (this.currentTask) return; // Already tasking
+    
+    // Check if task is already completed this round
+    if (this.isTaskCompleted(taskZone.id)) {
+      console.log(`❌ Task already completed this round: ${taskZone.name}`);
+      return;
+    }
+    
+    this.currentTask = taskZone;
+    this.taskProgress = 0;
+    this.taskStartTime = Date.now();
+    
+    // Block player movement during task
+    if (window.Player) {
+      window.Player.isTasking = true;
+      console.log(`🔒 Player movement blocked for task: ${taskZone.name}`);
+    }
+    
+    // Play task-specific sound
+    if (window.Audio) {
+      switch(taskZone.id) {
+        case 'dining':
+          window.Audio.playEatingTask();
+          break;
+        case 'cards':
+          window.Audio.playPokerTask();
+          break;
+        // No sound for dancing task as we don't have a dance sound yet
+      }
+    }
+    
+    console.log(`🔧 Started task: ${taskZone.name}`);
+  },
+
+  // Update task progress
+  updateTask() {
+    if (!this.currentTask) return;
+    
+    // Check if player is still in task zone (with tolerance)
+    if (window.Player && window.Map) {
+      const playerPosition = { x: window.Player.x, y: window.Player.y };
+      if (!this.isPlayerInTaskZone(playerPosition)) {
+        console.log('❌ Task cancelled - player left task zone');
+        this.cancelTask();
+        return;
+      }
+    }
+    
+    const elapsed = Date.now() - this.taskStartTime;
+    this.taskProgress = Math.min(elapsed / this.taskDuration, 1);
+    
+    // Task completed
+    if (this.taskProgress >= 1) {
+      console.log(`✅ Task completed: ${this.currentTask.name}`);
+      this.completeTask();
+    }
+  },
+
+  // Complete current task
+  completeTask() {
+    if (this.currentTask) {
+      // Mark task as completed
+      this.completedTasks.add(this.currentTask.id);
+      console.log(`🎉 Task "${this.currentTask.name}" finished and marked complete!`);
+      console.log(`✅ Completed tasks this round: ${Array.from(this.completedTasks).join(', ')}`);
+      
+      // TODO: Send task completion to server
+    }
+    
+    // Restore player movement
+    if (window.Player) {
+      window.Player.isTasking = false;
+      console.log(`🔓 Player movement restored`);
+    }
+    
+    this.currentTask = null;
+    this.taskProgress = 0;
+    this.taskStartTime = 0;
+  },
+
+  // Cancel current task
+  cancelTask() {
+    if (this.currentTask) {
+      console.log(`❌ Task cancelled: ${this.currentTask.name}`);
+      
+      // Restore player movement
+      if (window.Player) {
+        window.Player.isTasking = false;
+        console.log(`🔓 Player movement restored after cancel`);
+      }
+      
+      this.currentTask = null;
+      this.taskProgress = 0;
+      this.taskStartTime = 0;
+    }
+  },
+
+  // Check if player can start a task
+  canStartTask(playerPosition) {
+    if (this.currentTask) return false; // Already tasking
+    
+    const currentRoom = window.Map ? window.Map.getCurrentRoom() : null;
+    if (!currentRoom) return false;
+    
+    const taskZone = this.taskZones[currentRoom.id];
+    if (!taskZone) return false;
+    
+    // Check if task is already completed
+    if (this.isTaskCompleted(taskZone.id)) return false;
+    
+    const roomStartX = taskZone.roomIndex * (window.Map ? window.Map.roomWidth : 1920);
+    const zoneStartX = roomStartX + taskZone.startX;
+    const zoneEndX = roomStartX + taskZone.endX;
+    
+    console.log(`Task zone check: player=${playerPosition.x}, zone=${zoneStartX}-${zoneEndX}, room=${currentRoom.id}, completed=${this.isTaskCompleted(taskZone.id)}`);
+    
+    return playerPosition.x >= zoneStartX && playerPosition.x <= zoneEndX;
+  },
+
+  // Check if player is in task zone (more lenient for active tasks)
+  isPlayerInTaskZone(playerPosition) {
+    if (!this.currentTask) return false;
+    
+    const currentRoom = window.Map ? window.Map.getCurrentRoom() : null;
+    if (!currentRoom) return false;
+    
+    const taskZone = this.taskZones[currentRoom.id];
+    if (!taskZone) return false;
+    
+    const roomStartX = taskZone.roomIndex * (window.Map ? window.Map.roomWidth : 1920);
+    const zoneStartX = roomStartX + taskZone.startX;
+    const zoneEndX = roomStartX + taskZone.endX;
+    
+    // Add some tolerance for active tasks (10px buffer)
+    return playerPosition.x >= (zoneStartX - 10) && playerPosition.x <= (zoneEndX + 10);
+  },
+
+  // Draw task bar at bottom of screen
+  drawTaskBar(canvas, ctx, playerPosition) {
+    if (!canvas || !ctx || !window.Map) return;
+    
+    // Update task progress
+    this.updateTask();
+    
+    // Get current room
+    const currentRoom = window.Map.getCurrentRoom();
+    if (!currentRoom) return;
+    
+    // Check if current room has a task zone
+    const taskZone = this.taskZones[currentRoom.id];
+    if (!taskZone) return;
+    
+    // Task bar dimensions
+    const barHeight = 20;
+    const barY = canvas.height - barHeight - 10; // 10px from bottom
+    const barPadding = 50;
+    const barWidth = canvas.width - (barPadding * 2);
+    
+    // Calculate room boundaries in world coordinates
+    const roomStartX = taskZone.roomIndex * window.Map.roomWidth;
+    const zoneStartX = roomStartX + taskZone.startX;
+    const zoneEndX = roomStartX + taskZone.endX;
+    const zoneWidth = zoneEndX - zoneStartX;
+    
+    // Calculate player position relative to task zone
+    const playerInZone = playerPosition.x >= zoneStartX && playerPosition.x <= zoneEndX;
+    
+    // Draw task bar background
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(barPadding, barY, barWidth, barHeight);
+    
+    // Draw task bar border
+    ctx.strokeStyle = '#8b0000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(barPadding, barY, barWidth, barHeight);
+    
+    // Calculate task zone representation on the bar (proportional to room)
+    const roomWidth = window.Map.roomWidth;
+    const zoneStartPercent = taskZone.startX / roomWidth;
+    const zoneWidthPercent = (taskZone.endX - taskZone.startX) / roomWidth;
+    
+    const zoneBarStartX = barPadding + (zoneStartPercent * barWidth);
+    const zoneBarWidth = zoneWidthPercent * barWidth;
+    
+    // Draw task zone area on bar
+    ctx.fillStyle = playerInZone ? '#00ff00' : '#ffff00'; // Green if in zone, yellow if not
+    ctx.fillRect(zoneBarStartX, barY + 2, zoneBarWidth, barHeight - 4);
+    
+    // Draw task zone border
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(zoneBarStartX, barY + 2, zoneBarWidth, barHeight - 4);
+    
+    // Draw player position indicator
+    const playerPercent = (playerPosition.x - roomStartX) / roomWidth;
+    const playerBarX = barPadding + (playerPercent * barWidth);
+    
+    // Clamp player indicator to bar bounds
+    const clampedPlayerX = Math.max(barPadding, Math.min(barPadding + barWidth, playerBarX));
+    
+    // Draw player indicator line
+    ctx.strokeStyle = '#ff0000';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(clampedPlayerX, barY);
+    ctx.lineTo(clampedPlayerX, barY + barHeight);
+    ctx.stroke();
+    
+    // Draw task zone label
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '14px MedievalSharp';
+    ctx.textAlign = 'center';
+    const labelX = zoneBarStartX + (zoneBarWidth / 2);
+    ctx.fillText(taskZone.name, labelX, barY - 5);
+    
+    // Draw task icon when player is in zone and can start task
+    if (playerInZone && !this.currentTask && !this.isTaskCompleted(taskZone.id)) {
+      const iconSize = 48;
+      const iconX = canvas.width / 2 - iconSize / 2;
+      const iconY = canvas.height / 2 - iconSize / 2;
+      
+      // Get appropriate icon based on task type
+      let taskIcon = null;
+      switch(taskZone.id) {
+        case 'dining':
+          taskIcon = this.taskIcons.eating;
+          break;
+        case 'cards':
+          taskIcon = this.taskIcons.poker;
+          break;
+      }
+      
+      // Draw icon if loaded
+      if (taskIcon && taskIcon.complete) {
+        // Draw semi-transparent background circle
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.beginPath();
+        ctx.arc(iconX + iconSize/2, iconY + iconSize/2, iconSize/2 + 10, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // Draw border (green if hovered, yellow if not)
+        ctx.strokeStyle = this.currentIconHovered ? '#00ff00' : '#ffff00';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(iconX + iconSize/2, iconY + iconSize/2, iconSize/2 + 10, 0, 2 * Math.PI);
+        ctx.stroke();
+        
+        // Draw the icon
+        ctx.drawImage(taskIcon, iconX, iconY, iconSize, iconSize);
+        
+        // Store icon bounds for click detection
+        this.currentIconBounds = {
+          x: iconX,
+          y: iconY,
+          width: iconSize,
+          height: iconSize,
+          taskZone: taskZone
+        };
+      } else {
+        // Clear icon bounds if no icon is shown
+        this.currentIconBounds = null;
+      }
+    } else {
+      // Clear icon bounds if not in zone
+      this.currentIconBounds = null;
+    }
+    
+    // Draw status text based on current state
+    ctx.textAlign = 'left';
+    ctx.font = '12px MedievalSharp';
+    
+    if (this.currentTask) {
+      // Currently tasking
+      ctx.fillStyle = '#00ff00';
+      const statusText = `Taskolás: ${Math.round(this.taskProgress * 100)}%`;
+      ctx.fillText(statusText, barPadding + 5, barY - 25);
+    } else if (this.isTaskCompleted(taskZone.id)) {
+      // Task already completed
+      ctx.fillStyle = '#888888';
+      const statusText = `✅ Task elvégezve ebben a körben`;
+      ctx.fillText(statusText, barPadding + 5, barY - 25);
+    } else if (playerInZone) {
+      // Can start task
+      ctx.fillStyle = '#ffff00';
+      const statusText = 'Nyomd meg a T gombot a taskolás elkezdéséhez!';
+      ctx.fillText(statusText, barPadding + 5, barY - 25);
+    } else {
+      // Not in zone
+      ctx.fillStyle = '#ffff00';
+      const statusText = 'Menj a taskolási zónába';
+      ctx.fillText(statusText, barPadding + 5, barY - 25);
+    }
+    
+    // Reset text align
+    ctx.textAlign = 'left';
+  },
+
+  // Draw progress bar under player character
+  drawTaskProgressBar(canvas, ctx, playerScreenX, playerScreenY) {
+    if (!this.currentTask || this.taskProgress <= 0) return;
+    
+    // Progress bar dimensions
+    const barWidth = 60;
+    const barHeight = 8;
+    const barX = playerScreenX - barWidth / 2;
+    const barY = playerScreenY + 70; // Below character
+    
+    // Background
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(barX, barY, barWidth, barHeight);
+    
+    // Border
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(barX, barY, barWidth, barHeight);
+    
+    // Progress
+    const progressWidth = barWidth * this.taskProgress;
+    ctx.fillStyle = '#00ff00';
+    ctx.fillRect(barX, barY, progressWidth, barHeight);
+    
+    // Task name above progress bar
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '10px MedievalSharp';
+    ctx.textAlign = 'center';
+    ctx.fillText(this.currentTask.name, playerScreenX, barY - 5);
+    ctx.textAlign = 'left';
+  }
+};
+
+// Make TaskBar globally available
+window.TaskBar = TaskBar; 

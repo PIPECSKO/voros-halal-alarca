@@ -7,6 +7,7 @@ const Player = {
   x: 960, // Alapértelmezett pozíció (az init() skálázza majd)
   y: 898, // Karakter pozíció 12 pixellel feljebb
   isMoving: false,
+  isTasking: false, // New flag to block movement during tasks
   direction: 'right', // 'left' vagy 'right'
   animationFrame: 0,
   animationTimer: 0,
@@ -34,6 +35,9 @@ const Player = {
 
   setupControls() {
     window.addEventListener('keydown', (e) => {
+      // Block movement if tasking
+      if (this.isTasking) return;
+      
       if (e.code === 'KeyA' || e.code === 'ArrowLeft') {
         this.isMoving = true;
         this.direction = 'left';
@@ -43,6 +47,9 @@ const Player = {
       }
     });
     window.addEventListener('keyup', (e) => {
+      // Block movement if tasking
+      if (this.isTasking) return;
+      
       if ((e.code === 'KeyA' || e.code === 'ArrowLeft') && this.direction === 'left') {
         this.isMoving = false;
       } else if ((e.code === 'KeyD' || e.code === 'ArrowRight') && this.direction === 'right') {
@@ -52,6 +59,11 @@ const Player = {
   },
 
   update() {
+      // Stop movement if tasking
+      if (this.isTasking) {
+        this.isMoving = false;
+      }
+      
       if (this.isMoving) {
       // Get movement input
       const keys = {

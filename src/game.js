@@ -911,7 +911,7 @@ const Game = {
         
         const characters = {
           male: ['male1', 'male2', 'male3', 'male4', 'male5', 'male6', 'male7', 'male8'],
-          female: ['female1', 'female2', 'female3', 'female4', 'female5', 'female6'],
+          female: ['female1', 'female2', 'female3', 'female4', 'female5', 'female6', 'female7', 'female8', 'female9'],
           ghost: ['ghost'],
           special: ['prince']
         };
@@ -1339,6 +1339,45 @@ const Game = {
                 console.log("NPC made globally accessible:", !!window.NPC);
               }
               
+              // Initialize TaskBar icons
+              if (window.TaskBar && window.TaskBar.initTaskIcons) {
+                window.TaskBar.initTaskIcons();
+                console.log('TaskBar icons initialized');
+              }
+              
+              // Add canvas click and hover events for task icons
+              const gameCanvas = document.getElementById('game-canvas');
+              if (gameCanvas) {
+                // Click event
+                gameCanvas.addEventListener('click', (event) => {
+                  const rect = gameCanvas.getBoundingClientRect();
+                  const mouseX = event.clientX - rect.left;
+                  const mouseY = event.clientY - rect.top;
+                  
+                  // Handle task icon clicks
+                  if (window.TaskBar && window.TaskBar.handleIconClick) {
+                    const handled = window.TaskBar.handleIconClick(mouseX, mouseY);
+                    if (handled) {
+                      console.log('🖱️ Task icon click handled');
+                    }
+                  }
+                });
+                
+                // Mouse move event for hover effect
+                gameCanvas.addEventListener('mousemove', (event) => {
+                  const rect = gameCanvas.getBoundingClientRect();
+                  const mouseX = event.clientX - rect.left;
+                  const mouseY = event.clientY - rect.top;
+                  
+                  // Handle task icon hover
+                  if (window.TaskBar && window.TaskBar.handleIconHover) {
+                    window.TaskBar.handleIconHover(mouseX, mouseY);
+                  }
+                });
+                
+                console.log('Canvas click and hover handlers added for task icons');
+              }
+              
               console.log('Current game state:', {
                 character: window.Game.character,
                 role: window.Game.playerRole,
@@ -1361,6 +1400,14 @@ const Game = {
                   slashBtn.addEventListener('click', function() {
                     console.log('Slash button clicked!');
                     if (window.Animation && window.Player) {
+                      // Play sword swing sound
+                      if (window.Audio && window.Audio.playSwordSwing) {
+                        console.log('🔊 Playing sword swing sound from game.js');
+                        window.Audio.playSwordSwing();
+                      } else {
+                        console.warn('❌ Audio system not available for sword swing');
+                      }
+                      
                       // Get current direction from Player
                       const direction = window.Player.direction || 'right';
                       console.log('Playing slash animation in direction:', direction);
@@ -1397,6 +1444,23 @@ const Game = {
                   }
                   
                   if (window.Player && window.Player.draw) window.Player.draw();
+                  
+                  // Draw TaskBar (after everything else, on top)
+                  if (window.TaskBar && window.Player && window.Map) {
+                    const canvas = document.getElementById('game-canvas');
+                    const ctx = canvas ? canvas.getContext('2d') : null;
+                    if (canvas && ctx) {
+                      window.TaskBar.drawTaskBar(canvas, ctx, { x: window.Player.x, y: window.Player.y });
+                      
+                      // Draw task progress bar under player if tasking
+                      if (window.TaskBar.currentTask && window.Map) {
+                        // Convert world position to screen position
+                        const screenPos = window.Map.worldToScreen(window.Player.x, window.Player.y);
+                        window.TaskBar.drawTaskProgressBar(canvas, ctx, screenPos.x, screenPos.y);
+                      }
+                    }
+                  }
+                  
                   requestAnimationFrame(gameLoop);
                 } catch (error) {
                   console.error('Game loop error:', error);
@@ -1529,6 +1593,33 @@ const Game = {
                 } else if (event.code === 'Escape' && window.isPaused) {
                   event.preventDefault();
                   window.hidePauseMenu();
+                } else if (event.code === 'KeyT') {
+                  // Handle task start with T key
+                  event.preventDefault();
+                  if (window.TaskBar && window.Player) {
+                    const playerPosition = { x: window.Player.x, y: window.Player.y };
+                    
+                    if (window.TaskBar.canStartTask(playerPosition)) {
+                      // Get current room and task zone
+                      const currentRoom = window.Map ? window.Map.getCurrentRoom() : null;
+                      if (currentRoom) {
+                        const taskZone = window.TaskBar.taskZones[currentRoom.id];
+                        if (taskZone) {
+                          console.log('🔧 Starting task with T key:', taskZone.name);
+                          window.TaskBar.startTask(taskZone);
+                        }
+                      }
+                    } else {
+                      console.log('❌ Cannot start task - not in task zone');
+                    }
+                  }
+                } else if (event.code === 'KeyR') {
+                  // Handle task reset with R key (for testing)
+                  event.preventDefault();
+                  if (window.TaskBar) {
+                    console.log('🔄 Resetting tasks with R key (test function)');
+                    window.TaskBar.resetTasks();
+                  }
                 }
               };
               
@@ -2420,6 +2511,22 @@ const Game = {
     
     // Draw our player last (so it's on top)
     if (window.Player && window.Player.draw) window.Player.draw();
+    
+    // Draw TaskBar (after everything else, on top)
+    if (window.TaskBar && window.Player && window.Map) {
+      const canvas = document.getElementById('game-canvas');
+      const ctx = canvas ? canvas.getContext('2d') : null;
+      if (canvas && ctx) {
+        window.TaskBar.drawTaskBar(canvas, ctx, { x: window.Player.x, y: window.Player.y });
+        
+        // Draw task progress bar under player if tasking
+        if (window.TaskBar.currentTask && window.Map) {
+          // Convert world position to screen position
+          const screenPos = window.Map.worldToScreen(window.Player.x, window.Player.y);
+          window.TaskBar.drawTaskProgressBar(canvas, ctx, screenPos.x, screenPos.y);
+        }
+      }
+    }
   },
   
   // Timer functions
