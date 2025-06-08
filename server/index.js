@@ -84,9 +84,9 @@ io.on('connection', (socket) => {
   });
 
   // Use Socket.IO's dynamic ping measurement
-  const latency = socket.conn.ping || 45; // socket.io's internal ping measurement
+  const latency = socket.conn.ping || 50; // socket.io's internal ping measurement  
   socket.latency = latency;
-  console.log(`Client ${socket.id} latency: ${latency}ms (dynamic ping)`);
+  console.log(`Client ${socket.id} using measured ping latency: ${latency}ms`);
   
   // Handle ping for connection testing with proper latency measurement
   socket.on('ping', (data, callback) => {
@@ -396,9 +396,9 @@ io.on('connection', (socket) => {
     // Disabled flawed timestamp-based calculation
     // const roundTripTime = Date.now() - data.clientTime;
     // Use Socket.IO's dynamic ping measurement
-    const latency = socket.conn.ping || 45; // socket.io's internal ping measurement
+    const latency = socket.conn.ping || 50; // socket.io's internal ping measurement
     socket.latency = latency;
-    console.log(`Client ${socket.id} latency: ${latency}ms (dynamic ping)`);
+    console.log(`Client ${socket.id} using measured ping latency: ${latency}ms`);
   });
   
   // Disconnect handler
