@@ -83,6 +83,11 @@ io.on('connection', (socket) => {
     serverTime: new Date().toISOString()
   });
 
+  // Use Socket.IO's dynamic ping measurement
+  const latency = socket.conn.ping || 45; // socket.io's internal ping measurement
+  socket.latency = latency;
+  console.log(`Client ${socket.id} latency: ${latency}ms (dynamic ping)`);
+  
   // Handle ping for connection testing with proper latency measurement
   socket.on('ping', (data, callback) => {
     if (typeof callback === 'function') {
@@ -388,11 +393,12 @@ io.on('connection', (socket) => {
     // Client is still connected and responsive
     socket.lastHeartbeat = new Date();
     
-          // Disabled flawed timestamp-based latency measurement
-      // const roundTripTime = Date.now() - data.clientTime;
-      // const latency = Math.round(roundTripTime / 2);
-      socket.latency = 45; // Use measured ping value instead of flawed calculation
-      console.log(`Client ${socket.id} using measured ping latency: 45ms`);
+    // Disabled flawed timestamp-based calculation
+    // const roundTripTime = Date.now() - data.clientTime;
+    // Use Socket.IO's dynamic ping measurement
+    const latency = socket.conn.ping || 45; // socket.io's internal ping measurement
+    socket.latency = latency;
+    console.log(`Client ${socket.id} latency: ${latency}ms (dynamic ping)`);
   });
   
   // Disconnect handler
