@@ -103,6 +103,9 @@ const SocketConnector = {
           serverTime: data ? data.serverTime : null
         });
         
+        // Start periodic ping measurement for real-time latency
+        this.startPingMeasurement();
+        
         // Calculate and display latency if we have server time
         if (data && data.serverTime) {
           const serverTime = new Date(data.serverTime).getTime();
@@ -310,6 +313,25 @@ const SocketConnector = {
     } catch (error) {
       console.error("Error during disconnect:", error);
     }
+  },
+  
+  // Add ping measurement system
+  startPingMeasurement: () => {
+    // Measure ping every 5 seconds
+    if (this.pingInterval) clearInterval(this.pingInterval);
+    
+    this.pingInterval = setInterval(() => {
+      if (this.socket && this.socket.connected) {
+        const startTime = Date.now();
+        this.socket.emit('ping', { timestamp: startTime }, () => {
+          const endTime = Date.now();
+          const latency = endTime - startTime;
+          
+          // Send measured latency to server
+          this.socket.emit('ping_result', { latency: latency });
+        });
+      }
+    }, 5000);
   }
 };
 
