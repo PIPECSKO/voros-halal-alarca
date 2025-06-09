@@ -910,8 +910,8 @@ const Game = {
         gallery.innerHTML = '';
         
         const characters = {
-          male: ['male1', 'male2', 'male3', 'male4', 'male5', 'male6', 'male7', 'male8'],
-          female: ['female1', 'female2', 'female3', 'female4', 'female5', 'female6', 'female7', 'female8', 'female9'],
+          male: ['male1', 'male2', 'male3', 'male4', 'male5', 'male6', 'male7', 'male8', 'male9', 'male10', 'male11', 'male12', 'male13', 'male14', 'male15'],
+          female: ['female1', 'female2', 'female3', 'female4', 'female5', 'female6', 'female7', 'female8', 'female9', 'female10', 'female11', 'female12'],
           ghost: ['ghost'],
           special: ['prince']
         };

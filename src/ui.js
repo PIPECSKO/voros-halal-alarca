@@ -620,16 +620,32 @@ const UI = {
         { key: 'male1', img: 'assets/images/characters/males/male1/idle/male1_idle_facing_right1.png' },
         { key: 'male2', img: 'assets/images/characters/males/male2/idle/male2_idle_facing_right1.png' },
         { key: 'male3', img: 'assets/images/characters/males/male3/idle/male3_idle_facing_right1.png' },
-        { key: 'male4', img: 'assets/images/characters/males/male4/idle/male4_idle_facing_right1.png' }
+        { key: 'male4', img: 'assets/images/characters/males/male4/idle/male4_idle_facing_right1.png' },
+        { key: 'male5', img: 'assets/images/characters/males/male5/idle/male5_idle_facing_right1.png' },
+        { key: 'male6', img: 'assets/images/characters/males/male6/idle/male6_idle_facing_right1.png' },
+        { key: 'male7', img: 'assets/images/characters/males/male7/idle/male7_idle_facing_right1.png' },
+        { key: 'male8', img: 'assets/images/characters/males/male8/idle/male8_idle_facing_right1.png' },
+        { key: 'male9', img: 'assets/images/characters/males/male9/idle/male9_idle_facing_right1.png' },
+        { key: 'male10', img: 'assets/images/characters/males/male10/idle/male10_idle_facing_right1.png' },
+        { key: 'male11', img: 'assets/images/characters/males/male11/idle/male11_idle_facing_right1.png' },
+        { key: 'male12', img: 'assets/images/characters/males/male12/idle/male12_idle_facing_right1.png' },
+        { key: 'male13', img: 'assets/images/characters/males/male13/idle/male13_idle_facing_right1.png' },
+        { key: 'male14', img: 'assets/images/characters/males/male14/idle/male14_idle_facing_right1.png' },
+        { key: 'male15', img: 'assets/images/characters/males/male15/idle/male15_idle_facing_right1.png' }
       ],
       female: [
         { key: 'female1', img: 'assets/images/characters/females/female1/idle/female1_idle_facing_right1.png' },
         { key: 'female2', img: 'assets/images/characters/females/female2/idle/female2_idle_facing_right1.png' },
         { key: 'female3', img: 'assets/images/characters/females/female3/idle/female3_idle_facing_right1.png' },
         { key: 'female4', img: 'assets/images/characters/females/female4/idle/female4_idle_facing_right1.png' },
+        { key: 'female5', img: 'assets/images/characters/females/female5/idle/female5_idle_facing_right1.png' },
+        { key: 'female6', img: 'assets/images/characters/females/female6/idle/female6_idle_facing_right1.png' },
         { key: 'female7', img: 'assets/images/characters/females/female7/idle/female7_idle_facing_right1.png' },
         { key: 'female8', img: 'assets/images/characters/females/female8/idle/female8_idle_facing_right1.png' },
-        { key: 'female9', img: 'assets/images/characters/females/female9/idle/female9_idle_facing_right1.png' }
+        { key: 'female9', img: 'assets/images/characters/females/female9/idle/female9_idle_facing_right1.png' },
+        { key: 'female10', img: 'assets/images/characters/females/female10/idle/female10_idle_facing_right1.png' },
+        { key: 'female11', img: 'assets/images/characters/females/female11/idle/female11_idle_facing_right1.png' },
+        { key: 'female12', img: 'assets/images/characters/females/female12/idle/female12_idle_facing_right1.png' }
       ]
     };
     // Alapértelmezett: egyik sem kiválasztva
