@@ -658,8 +658,6 @@ const UI = {
         const img = document.createElement('img');
         img.src = char.img;
         img.alt = char.key;
-        img.style.width = '64px';
-        img.style.height = '96px';
         img.style.cursor = 'pointer';
         img.style.border = '2px solid transparent';
         img.onclick = () => {
@@ -676,8 +674,6 @@ const UI = {
         const img = document.createElement('img');
         img.src = char.img;
         img.alt = char.key;
-        img.style.width = '64px';
-        img.style.height = '96px';
         img.style.cursor = 'pointer';
         img.style.border = '2px solid transparent';
         img.onclick = () => {
@@ -694,8 +690,6 @@ const UI = {
       const img = document.createElement('img');
       img.src = 'assets/images/characters/prince/idle/prince_idle_facing_right1.png';
       img.alt = 'prince';
-      img.style.width = '64px';
-      img.style.height = '96px';
       img.style.cursor = 'pointer';
       img.style.border = '2px solid transparent';
       img.onclick = () => {
