@@ -90,6 +90,39 @@
           <button id="ready-button">Kész vagyok</button>
           <button id="start-button" style="display: none;">Játék indítása</button>
         </div>
+        
+        <!-- Volume Controls in Lobby -->
+        <div class="volume-controls-lobby" style="
+          margin-top: auto;
+          padding: 8px;
+          border-top: 2px solid #8b0000;
+          text-align: center;
+          width: 100%;
+          background: rgba(26, 0, 0, 0.95);
+          border: 2px solid #8b0000;
+          border-radius: 8px;
+          flex-shrink: 0;
+        ">
+          <h3 style="color: #8b0000; margin-bottom: 10px; font-family: 'MedievalSharp', serif; font-size: 16px;">Hangerő beállítások</h3>
+          <div style="display: flex; justify-content: space-around; align-items: center; gap: 30px;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+              <label style="color: #8b0000; font-size: 14px; font-family: 'MedievalSharp', serif;">Zene hangerő</label>
+              <input type="range" id="lobby-music-volume-slider" min="0" max="100" value="40" style="
+                width: 150px;
+                accent-color: #8b0000;
+              ">
+              <span id="lobby-music-volume-display" style="color: #8b0000; font-size: 12px; font-family: 'MedievalSharp', serif;">40%</span>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+              <label style="color: #8b0000; font-size: 14px; font-family: 'MedievalSharp', serif;">Hangeffektek</label>
+              <input type="range" id="lobby-sfx-volume-slider" min="0" max="100" value="60" style="
+                width: 150px;
+                accent-color: #8b0000;
+              ">
+              <span id="lobby-sfx-volume-display" style="color: #8b0000; font-size: 12px; font-family: 'MedievalSharp', serif;">60%</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     
