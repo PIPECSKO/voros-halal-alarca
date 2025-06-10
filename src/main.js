@@ -132,6 +132,10 @@ window.addEventListener('DOMContentLoaded', () => {
     // Make modules available globally
     window.Audio = Audio;
     window.NPC = NPC;
+    window.Player = Player;
+    window.Animation = Animation;
+    window.Map = Map;
+    window.Game = Game;
     
     // Setup main menu volume controls
     setupMainMenuVolumeControls();

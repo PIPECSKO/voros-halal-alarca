@@ -911,7 +911,7 @@ const Game = {
         
         const characters = {
           male: ['male1', 'male2', 'male3', 'male4', 'male5', 'male6', 'male7', 'male8', 'male9', 'male10', 'male11', 'male12', 'male13', 'male14', 'male15'],
-          female: ['female1', 'female2', 'female3', 'female4', 'female5', 'female6', 'female7', 'female8', 'female9', 'female10', 'female11', 'female12'],
+          female: ['female1', 'female2', 'female3', 'female4', 'female5', 'female6', 'female7', 'female8', 'female9', 'female10', 'female11', 'female12', 'female13', 'female14', 'female15'],
           ghost: ['ghost'],
           special: ['prince']
         };
@@ -931,7 +931,7 @@ const Game = {
             imagePath = `assets/images/characters/${genderFolder}/idle/${char}_idle_facing_right1.png`;
           } else {
             genderFolder = gender === 'male' ? 'males' : 'females';
-            imagePath = `assets/images/characters/${genderFolder}/${char}/idle/${char}_idle_facing_right1.png`;
+            imagePath = `assets/images/characters/${genderFolder}/${char}/idle/${char}_idle_facing_right1.png?v=${Date.now()}`;
           }
           
           img.src = imagePath;
@@ -1423,7 +1423,7 @@ const Game = {
               } else if (role === 'plague-commoner' || role === 'plague-noble' || role === 'plague') {
                 const infectBtn = document.getElementById('infect-button');
                 if (infectBtn) infectBtn.style.display = 'block';
-                console.log('Infect button shown for plague role');
+                  console.log('Infect button shown for plague role');
               }
               
               // Játék ciklus indítása

@@ -152,6 +152,30 @@ const UI = {
         }
       });
       
+      // Character selection confirm button
+      this.addClickHandler('character-select-confirm', () => {
+        if (window.selectedCharacter) {
+          console.log('Character confirmed:', window.selectedCharacter);
+          // Update Player and Animation character
+          if (window.Player) {
+            window.Player.character = window.selectedCharacter;
+          }
+          if (window.Animation) {
+            window.Animation.character = window.selectedCharacter;
+            window.Animation.init(window.selectedCharacter);
+          }
+          this.showError(`Karakter kiválasztva: ${window.selectedCharacter}`);
+        } else {
+          this.showError('Kérlek válassz karaktert először!');
+        }
+      });
+
+      // DEBUG: Manual character setup button
+      this.addClickHandler('debug-character-setup', () => {
+        console.log('🔧 DEBUG: Manual character setup triggered');
+        this.setupLobbyCharacterSelection();
+      });
+
       // Game action buttons
       this.addClickHandler('task-button', this.handleTaskAction);
       this.addClickHandler('clean-body-button', this.handleCleanBodyAction);
@@ -215,7 +239,7 @@ const UI = {
         if (screenId === 'lobby-screen') {
           // Kis delay után setupoljuk, hogy az elemek már létezzenek
           setTimeout(() => {
-            this.setupLobbyCharacterSelection();
+          this.setupLobbyCharacterSelection();
           }, 100);
         }
       } else {
@@ -610,95 +634,125 @@ const UI = {
     }
   },
   
-  // Lobby gender és karakterválasztó logika
+  // Lobby gender és karakterválasztó logika - TELJES ÚJRAÍRÁS
   setupLobbyCharacterSelection() {
+    console.log('🔍 setupLobbyCharacterSelection called! - NEW VERSION');
     const gallery = document.getElementById('character-gallery');
-    if (!gallery) return;
-    // Elérhető karakterek
-    const characters = {
-      male: [
-        { key: 'male1', img: 'assets/images/characters/males/male1/idle/male1_idle_facing_right1.png' },
-        { key: 'male2', img: 'assets/images/characters/males/male2/idle/male2_idle_facing_right1.png' },
-        { key: 'male3', img: 'assets/images/characters/males/male3/idle/male3_idle_facing_right1.png' },
-        { key: 'male4', img: 'assets/images/characters/males/male4/idle/male4_idle_facing_right1.png' },
-        { key: 'male5', img: 'assets/images/characters/males/male5/idle/male5_idle_facing_right1.png' },
-        { key: 'male6', img: 'assets/images/characters/males/male6/idle/male6_idle_facing_right1.png' },
-        { key: 'male7', img: 'assets/images/characters/males/male7/idle/male7_idle_facing_right1.png' },
-        { key: 'male8', img: 'assets/images/characters/males/male8/idle/male8_idle_facing_right1.png' },
-        { key: 'male9', img: 'assets/images/characters/males/male9/idle/male9_idle_facing_right1.png' },
-        { key: 'male10', img: 'assets/images/characters/males/male10/idle/male10_idle_facing_right1.png' },
-        { key: 'male11', img: 'assets/images/characters/males/male11/idle/male11_idle_facing_right1.png' },
-        { key: 'male12', img: 'assets/images/characters/males/male12/idle/male12_idle_facing_right1.png' },
-        { key: 'male13', img: 'assets/images/characters/males/male13/idle/male13_idle_facing_right1.png' },
-        { key: 'male14', img: 'assets/images/characters/males/male14/idle/male14_idle_facing_right1.png' },
-        { key: 'male15', img: 'assets/images/characters/males/male15/idle/male15_idle_facing_right1.png' }
-      ],
-      female: [
-        { key: 'female1', img: 'assets/images/characters/females/female1/idle/female1_idle_facing_right1.png' },
-        { key: 'female2', img: 'assets/images/characters/females/female2/idle/female2_idle_facing_right1.png' },
-        { key: 'female3', img: 'assets/images/characters/females/female3/idle/female3_idle_facing_right1.png' },
-        { key: 'female4', img: 'assets/images/characters/females/female4/idle/female4_idle_facing_right1.png' },
-        { key: 'female5', img: 'assets/images/characters/females/female5/idle/female5_idle_facing_right1.png' },
-        { key: 'female6', img: 'assets/images/characters/females/female6/idle/female6_idle_facing_right1.png' },
-        { key: 'female7', img: 'assets/images/characters/females/female7/idle/female7_idle_facing_right1.png' },
-        { key: 'female8', img: 'assets/images/characters/females/female8/idle/female8_idle_facing_right1.png' },
-        { key: 'female9', img: 'assets/images/characters/females/female9/idle/female9_idle_facing_right1.png' },
-        { key: 'female10', img: 'assets/images/characters/females/female10/idle/female10_idle_facing_right1.png' },
-        { key: 'female11', img: 'assets/images/characters/females/female11/idle/female11_idle_facing_right1.png' },
-        { key: 'female12', img: 'assets/images/characters/females/female12/idle/female12_idle_facing_right1.png' }
-      ]
-    };
+    if (!gallery) {
+      console.error('❌ character-gallery element not found!');
+      return;
+    }
+    console.log('✅ character-gallery found:', gallery);
+    
+    // FORCE CLEAR EVERYTHING
+    gallery.innerHTML = '';
+    gallery.style.display = 'grid';
+    gallery.style.gridTemplateColumns = 'repeat(4, 1fr)';
+    gallery.style.gap = '10px';
+    gallery.style.padding = '10px';
+    
+    // HARD-CODED karakterek (NO CACHE ISSUES!)
+    const allFemaleCharacters = [
+      'female1', 'female2', 'female3', 'female4', 'female5', 'female6', 
+      'female7', 'female8', 'female9', 'female10', 'female11', 'female12',
+      'female13', 'female14', 'female15' // <<<< EZEK A HIÁNYZÓ KARAKTEREK!
+    ];
+    
+    const allMaleCharacters = [
+      'male1', 'male2', 'male3', 'male4', 'male5', 'male6',
+      'male7', 'male8', 'male9', 'male10', 'male11', 'male12',
+      'male13', 'male14', 'male15'
+    ];
+    
     // Alapértelmezett: egyik sem kiválasztva
     if (!window.selectedCharacter) window.selectedCharacter = null;
+    
+    // Gender gombok eseménykezelői - ÚJ IMPLEMENTÁCIÓ
+    const maleBtn = document.getElementById('gender-male');
+    const femaleBtn = document.getElementById('gender-female');
+    const specialBtn = document.getElementById('gender-special');
+    
+    if (maleBtn) {
+      maleBtn.onclick = () => {
+        console.log('👨 Male gender button clicked!');
     gallery.innerHTML = '';
-    // Gender gombok eseménykezelői
-    document.getElementById('gender-male').onclick = () => {
-      gallery.innerHTML = '';
-      characters.male.forEach(char => {
-        const img = document.createElement('img');
-        img.src = char.img;
-        img.alt = char.key;
+        console.log('📋 Male characters to display:', allMaleCharacters.length);
+        
+        allMaleCharacters.forEach(charKey => {
+          console.log('➕ Adding male character:', charKey);
+          const img = document.createElement('img');
+          img.src = `assets/images/characters/males/${charKey}/idle/${charKey}_idle_facing_right1.png?v=${Date.now()}`;
+          img.alt = charKey;
         img.style.cursor = 'pointer';
-        img.style.border = '2px solid transparent';
+          img.style.border = '3px solid transparent';
+          img.style.borderRadius = '5px';
+          img.style.width = '80px';
+          img.style.height = '120px';
+          img.style.objectFit = 'contain';
         img.onclick = () => {
-          window.selectedCharacter = char.key;
-          Array.from(gallery.children).forEach(child => child.style.border = '2px solid transparent');
-          img.style.border = '2px solid #FFD700';
+            window.selectedCharacter = charKey;
+            Array.from(gallery.children).forEach(child => child.style.border = '3px solid transparent');
+            img.style.border = '3px solid #FFD700';
+            console.log('Selected character:', charKey);
         };
         gallery.appendChild(img);
       });
     };
-    document.getElementById('gender-female').onclick = () => {
+    }
+    
+    if (femaleBtn) {
+      femaleBtn.onclick = () => {
+        console.log('🚺 Female gender button clicked! - NEW VERSION');
       gallery.innerHTML = '';
-      characters.female.forEach(char => {
+        console.log('📋 Female characters to display:', allFemaleCharacters.length);
+        
+        allFemaleCharacters.forEach(charKey => {
+          console.log('➕ Adding female character:', charKey);
         const img = document.createElement('img');
-        img.src = char.img;
-        img.alt = char.key;
+          img.src = `assets/images/characters/females/${charKey}/idle/${charKey}_idle_facing_right1.png`;
+          img.alt = charKey;
         img.style.cursor = 'pointer';
-        img.style.border = '2px solid transparent';
+          img.style.border = '3px solid transparent';
+          img.style.borderRadius = '5px';
+          img.style.width = '80px';
+          img.style.height = '120px';
+          img.style.objectFit = 'contain';
         img.onclick = () => {
-          window.selectedCharacter = char.key;
-          Array.from(gallery.children).forEach(child => child.style.border = '2px solid transparent');
-          img.style.border = '2px solid #FFD700';
+            window.selectedCharacter = charKey;
+            Array.from(gallery.children).forEach(child => child.style.border = '3px solid transparent');
+            img.style.border = '3px solid #FFD700';
+            console.log('Selected character:', charKey);
         };
         gallery.appendChild(img);
       });
     };
-    document.getElementById('gender-special').onclick = () => {
-      gallery.innerHTML = '';
-      // Prince character
-      const img = document.createElement('img');
-      img.src = 'assets/images/characters/prince/idle/prince_idle_facing_right1.png';
-      img.alt = 'prince';
-      img.style.cursor = 'pointer';
-      img.style.border = '2px solid transparent';
-      img.onclick = () => {
-        window.selectedCharacter = 'prince';
-        Array.from(gallery.children).forEach(child => child.style.border = '2px solid transparent');
-        img.style.border = '2px solid #FFD700';
+  }
+    
+    if (specialBtn) {
+      specialBtn.onclick = () => {
+        console.log('👑 Special gender button clicked!');
+        gallery.innerHTML = '';
+        
+        const img = document.createElement('img');
+        img.src = 'assets/images/characters/prince/idle/prince_idle_facing_right1.png';
+        img.alt = 'prince';
+        img.style.cursor = 'pointer';
+        img.style.border = '3px solid transparent';
+        img.style.borderRadius = '5px';
+        img.style.width = '80px';
+        img.style.height = '120px';
+        img.style.objectFit = 'contain';
+        img.onclick = () => {
+          window.selectedCharacter = 'prince';
+          Array.from(gallery.children).forEach(child => child.style.border = '3px solid transparent');
+          img.style.border = '3px solid #FFD700';
+          console.log('Selected character: prince');
+        };
+        gallery.appendChild(img);
       };
-      gallery.appendChild(img);
-    };
+    }
+    
+    console.log('✅ Character selection setup completed!');
   }
 };
 

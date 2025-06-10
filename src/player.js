@@ -13,6 +13,7 @@ const Player = {
   animationTimer: 0,
   speed: 5, // mozgás sebessége (kicsit gyorsabb az nagyobb szobákhoz)
   previousAnimationFrame: 0, // For footstep sound timing
+  character: 'male1', // Default character
 
   // Segédfüggvény a padló pozíció kiszámításához
   getFloorY() {
@@ -30,6 +31,8 @@ const Player = {
     this.direction = 'right';
     this.animationFrame = 0;
     this.animationTimer = 0;
+    // Set character from selected character or default
+    this.character = window.selectedCharacter || 'male1';
     this.setupControls();
   },
 

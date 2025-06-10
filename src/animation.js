@@ -70,9 +70,13 @@ const Animation = {
         imgL.src = `assets/images/characters/${genderFolder}/idle/${this.character}_idle_facing_left${i}.png`;
         imgR.src = `assets/images/characters/${genderFolder}/idle/${this.character}_idle_facing_right${i}.png`;
       } else {
-        imgL.src = `assets/images/characters/${genderFolder}/${this.character}/idle/${this.character}_idle_facing_left${i}.png`;
-        imgR.src = `assets/images/characters/${genderFolder}/${this.character}/idle/${this.character}_idle_facing_right${i}.png`;
+        imgL.src = `assets/images/characters/${genderFolder}/${this.character}/idle/${this.character}_idle_facing_left${i}.png?v=${Date.now()}`;
+        imgR.src = `assets/images/characters/${genderFolder}/${this.character}/idle/${this.character}_idle_facing_right${i}.png?v=${Date.now()}`;
+        console.log(`Loading idle frames for ${this.character}: ${imgL.src}, ${imgR.src}`);
       }
+      
+      imgL.onerror = () => console.error(`Failed to load left idle frame ${i} for ${this.character}`);
+      imgR.onerror = () => console.error(`Failed to load right idle frame ${i} for ${this.character}`);
       
       this.frames.idle.left.push(imgL);
       this.frames.idle.right.push(imgR);
@@ -94,9 +98,13 @@ const Animation = {
         imgL.src = `assets/images/characters/${genderFolder}/walk/${this.character}_walk_facing_left${i}.png`;
         imgR.src = `assets/images/characters/${genderFolder}/walk/${this.character}_walk_facing_right${i}.png`;
       } else {
-        imgL.src = `assets/images/characters/${genderFolder}/${this.character}/walk/${this.character}_walk_facing_left${i}.png`;
-        imgR.src = `assets/images/characters/${genderFolder}/${this.character}/walk/${this.character}_walk_facing_right${i}.png`;
+        imgL.src = `assets/images/characters/${genderFolder}/${this.character}/walk/${this.character}_walk_facing_left${i}.png?v=${Date.now()}`;
+        imgR.src = `assets/images/characters/${genderFolder}/${this.character}/walk/${this.character}_walk_facing_right${i}.png?v=${Date.now()}`;
+        console.log(`Loading walk frames for ${this.character}: ${imgL.src}, ${imgR.src}`);
       }
+      
+      imgL.onerror = () => console.error(`Failed to load left walk frame ${i} for ${this.character}`);
+      imgR.onerror = () => console.error(`Failed to load right walk frame ${i} for ${this.character}`);
       
       this.frames.walk.left.push(imgL);
       this.frames.walk.right.push(imgR);
@@ -127,6 +135,12 @@ const Animation = {
     // Ne töröljük a canvas-t, a Map kezeli azt
     // Karakter kirajzolása
     let char = (window.Player && window.Player.character) ? window.Player.character : (window.selectedCharacter || this.character || 'male1');
+    
+    // Update Player character if selectedCharacter has changed
+    if (window.Player && window.selectedCharacter && window.Player.character !== window.selectedCharacter) {
+      window.Player.character = window.selectedCharacter;
+      char = window.selectedCharacter;
+    }
     
     // Check if we're playing slash animation
     let animType, currentDirection, currentFrame;
