@@ -14,6 +14,8 @@ const Player = {
   speed: 5, // mozgás sebessége (kicsit gyorsabb az nagyobb szobákhoz)
   previousAnimationFrame: 0, // For footstep sound timing
   character: 'male1', // Default character
+  isDead: false, // ÚJ: halott állapot
+  deathStartTime: null, // ÚJ: halál animáció kezdete
 
   // Segédfüggvény a padló pozíció kiszámításához
   getFloorY() {
@@ -38,9 +40,8 @@ const Player = {
 
   setupControls() {
     window.addEventListener('keydown', (e) => {
-      // Block movement if tasking
-      if (this.isTasking) return;
-      
+      // Block movement if tasking vagy halott
+      if (this.isTasking || this.isDead) return;
       if (e.code === 'KeyA' || e.code === 'ArrowLeft') {
         this.isMoving = true;
         this.direction = 'left';
@@ -48,11 +49,16 @@ const Player = {
         this.isMoving = true;
         this.direction = 'right';
       }
+      // X gomb: halál animáció triggerelése
+      if (e.code === 'KeyX' && !this.isDead) {
+        this.isDead = true;
+        this.isMoving = false;
+        this.deathStartTime = Date.now();
+      }
     });
     window.addEventListener('keyup', (e) => {
-      // Block movement if tasking
-      if (this.isTasking) return;
-      
+      // Block movement if tasking vagy halott
+      if (this.isTasking || this.isDead) return;
       if ((e.code === 'KeyA' || e.code === 'ArrowLeft') && this.direction === 'left') {
         this.isMoving = false;
       } else if ((e.code === 'KeyD' || e.code === 'ArrowRight') && this.direction === 'right') {
@@ -62,8 +68,8 @@ const Player = {
   },
 
   update() {
-      // Stop movement if tasking
-      if (this.isTasking) {
+      // Stop movement if tasking vagy halott
+      if (this.isTasking || this.isDead) {
         this.isMoving = false;
       }
       

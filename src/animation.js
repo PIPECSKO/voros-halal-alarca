@@ -10,7 +10,8 @@ const Animation = {
     idle: { left: [], right: [] },
     walk: { left: [], right: [] },
     slash: { left: [], right: [] },
-    task: []
+    task: [],
+    death: []
   },
   
   character: 'male1',
@@ -177,6 +178,57 @@ const Animation = {
         this.frames.task.push(img);
       }
     }
+    
+    // Death animáció female1-6-hoz
+    this.frames.death = [];
+    if (this.character === 'female1') {
+      for (let i = 1; i <= 6; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/females/female1/death/female1_death${i}.png`;
+        img.onerror = () => console.error(`Failed to load female1 death animation frame ${i}`);
+        this.frames.death.push(img);
+      }
+    }
+    if (this.character === 'female2') {
+      for (let i = 1; i <= 6; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/females/female2/death/female2_death${i}.png`;
+        img.onerror = () => console.error(`Failed to load female2 death animation frame ${i}`);
+        this.frames.death.push(img);
+      }
+    }
+    if (this.character === 'female3') {
+      for (let i = 1; i <= 6; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/females/female3/death/female3_death${i}.png`;
+        img.onerror = () => console.error(`Failed to load female3 death animation frame ${i}`);
+        this.frames.death.push(img);
+      }
+    }
+    if (this.character === 'female4') {
+      for (let i = 1; i <= 6; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/females/female4/death/female4_death${i}.png`;
+        img.onerror = () => console.error(`Failed to load female4 death animation frame ${i}`);
+        this.frames.death.push(img);
+      }
+    }
+    if (this.character === 'female5') {
+      for (let i = 1; i <= 6; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/females/female5/death/female5_death${i}.png`;
+        img.onerror = () => console.error(`Failed to load female5 death animation frame ${i}`);
+        this.frames.death.push(img);
+      }
+    }
+    if (this.character === 'female6') {
+      for (let i = 1; i <= 6; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/females/female6/death/female6_death${i}.png`;
+        img.onerror = () => console.error(`Failed to load female6 death animation frame ${i}`);
+        this.frames.death.push(img);
+      }
+    }
   },
   
   // Draw character
@@ -231,6 +283,40 @@ const Animation = {
       const worldPos = usingCameraSystem ? 
         { x: window.Player.x - width/2, y: window.Player.y - height } :
         { x: x, y: y };
+      if (usingCameraSystem) {
+        ctx.save();
+        ctx.translate(-window.Map.camera.x, -window.Map.camera.y);
+      }
+      ctx.drawImage(frame, worldPos.x, worldPos.y, width, height);
+      // Name tag
+      const playerName = (window.Game && window.Game.username) || 'Player';
+      const playerRole = (window.Game && window.Game.playerRole) || 'commoner';
+      const groupColor = (window.Game && window.Game.groupColor) || null;
+      this.drawNameTag(ctx, worldPos.x + width/2, worldPos.y - 10, playerName, playerRole, groupColor);
+      if (usingCameraSystem) ctx.restore();
+      return;
+    }
+    
+    // DEATH ANIMÁCIÓ: female1-6
+    if ((char === 'female1' || char === 'female2' || char === 'female3' || char === 'female4' || char === 'female5' || char === 'female6') && window.Player && window.Player.isDead && this.frames.death && this.frames.death.length > 0) {
+      // Death animáció frame index számítása (idő alapján, 6 fps)
+      const now = Date.now();
+      let frameIdx = Math.floor((now - (window.Player.deathStartTime || now)) / 166);
+      if (frameIdx >= this.frames.death.length) frameIdx = this.frames.death.length - 1;
+      const frame = this.frames.death[frameIdx];
+      const width = frame.width || 64;
+      const height = frame.height || 96;
+      const usingCameraSystem = window.Map && window.Map.camera;
+      // Y eltolás: minden frame-mel 4 pixellel lejjebb
+      let yOffset = 0;
+      if (frameIdx < this.frames.death.length - 1) {
+        yOffset = frameIdx * 4;
+      } else {
+        yOffset = (this.frames.death.length - 1) * 4;
+      }
+      const worldPos = usingCameraSystem ? 
+        { x: window.Player.x - width/2, y: window.Player.y - height + yOffset } :
+        { x: x, y: y + yOffset };
       if (usingCameraSystem) {
         ctx.save();
         ctx.translate(-window.Map.camera.x, -window.Map.camera.y);
