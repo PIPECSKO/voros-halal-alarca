@@ -9,7 +9,8 @@ const Animation = {
   frames: {
     idle: { left: [], right: [] },
     walk: { left: [], right: [] },
-    slash: { left: [], right: [] }
+    slash: { left: [], right: [] },
+    task: []
   },
   
   character: 'male1',
@@ -125,6 +126,16 @@ const Animation = {
         this.frames.slash.right.push(imgR);
       }
     }
+    
+    // Task animáció csak female1-hez
+    if (this.character === 'female1') {
+      for (let i = 1; i <= 5; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/females/female1/animation/female1_animation${i}.png`;
+        img.onerror = () => console.error(`Failed to load female1 task animation frame ${i}`);
+        this.frames.task.push(img);
+      }
+    }
   },
   
   // Draw character
@@ -166,6 +177,32 @@ const Animation = {
     const frames = this.frames[animType][currentDirection];
     if (!frames || frames.length === 0) return;
     const frame = frames[currentFrame % frames.length];
+    
+    // ÚJ: female1 task animáció
+    if (char === 'female1' && window.Player && window.Player.isTasking && this.frames.task && this.frames.task.length > 0) {
+      // Task animáció frame index számítása (idő alapján, 8 fps)
+      const now = Date.now();
+      const frameIdx = Math.floor((now / 125) % this.frames.task.length);
+      const frame = this.frames.task[frameIdx];
+      const width = frame.width || 64;
+      const height = frame.height || 96;
+      const usingCameraSystem = window.Map && window.Map.camera;
+      const worldPos = usingCameraSystem ? 
+        { x: window.Player.x - width/2, y: window.Player.y - height } :
+        { x: x, y: y };
+      if (usingCameraSystem) {
+        ctx.save();
+        ctx.translate(-window.Map.camera.x, -window.Map.camera.y);
+      }
+      ctx.drawImage(frame, worldPos.x, worldPos.y, width, height);
+      // Name tag
+      const playerName = (window.Game && window.Game.username) || 'Player';
+      const playerRole = (window.Game && window.Game.playerRole) || 'commoner';
+      const groupColor = (window.Game && window.Game.groupColor) || null;
+      this.drawNameTag(ctx, worldPos.x + width/2, worldPos.y - 10, playerName, playerRole, groupColor);
+      if (usingCameraSystem) ctx.restore();
+      return;
+    }
     
     // Ha a Map kamera rendszert használ, alkalmazni kell a transform-ot
     const usingCameraSystem = window.Map && window.Map.camera;

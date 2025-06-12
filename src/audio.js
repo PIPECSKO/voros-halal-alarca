@@ -51,6 +51,8 @@ const Audio = {
     console.log("Loading task sounds...");
     this.sounds.eating = new window.Audio('assets/sounds/task/eating.mp3');
     this.sounds.poker = new window.Audio('assets/sounds/task/poker.mp3');
+    this.sounds.drinking = new window.Audio('assets/sounds/task/drinking.mp3');
+    this.sounds.smoking = new window.Audio('assets/sounds/task/smoking.mp3');
     
     // Set volume for footsteps
     this.sounds.step1.volume = this.soundEffectsVolume * 0.3; // 30% of current SFX volume
@@ -63,6 +65,8 @@ const Audio = {
     // Set volume for task sounds
     this.sounds.eating.volume = this.soundEffectsVolume * 0.4; // 40% of current SFX volume
     this.sounds.poker.volume = this.soundEffectsVolume * 0.4;
+    this.sounds.drinking.volume = this.soundEffectsVolume * 0.4;
+    this.sounds.smoking.volume = this.soundEffectsVolume * 0.4;
     
     // Preload sounds
     this.sounds.step1.preload = 'auto';
@@ -71,6 +75,8 @@ const Audio = {
     this.sounds.sword2.preload = 'auto';
     this.sounds.eating.preload = 'auto';
     this.sounds.poker.preload = 'auto';
+    this.sounds.drinking.preload = 'auto';
+    this.sounds.smoking.preload = 'auto';
     
     // Add load event listeners for debugging
     this.sounds.sword1.addEventListener('canplaythrough', () => {
@@ -85,6 +91,12 @@ const Audio = {
     this.sounds.poker.addEventListener('canplaythrough', () => {
       console.log("✓ poker.mp3 loaded successfully");
     });
+    this.sounds.drinking.addEventListener('canplaythrough', () => {
+      console.log("✓ drinking.mp3 loaded successfully");
+    });
+    this.sounds.smoking.addEventListener('canplaythrough', () => {
+      console.log("✓ smoking.mp3 loaded successfully");
+    });
     
     // Add error event listeners
     this.sounds.sword1.addEventListener('error', (e) => {
@@ -98,6 +110,12 @@ const Audio = {
     });
     this.sounds.poker.addEventListener('error', (e) => {
       console.error("✗ Error loading poker.mp3:", e);
+    });
+    this.sounds.drinking.addEventListener('error', (e) => {
+      console.error("✗ Error loading drinking.mp3:", e);
+    });
+    this.sounds.smoking.addEventListener('error', (e) => {
+      console.error("✗ Error loading smoking.mp3:", e);
     });
     
     console.log("Audio sounds loaded (including sword and task sounds)");
@@ -227,6 +245,40 @@ const Audio = {
     }
   },
   
+  // Play drinking task sound
+  playDrinkingTask() {
+    console.log("🎵 PlayDrinkingTask called");
+    if (!this.soundEffectsEnabled) {
+      console.log("Sound effects disabled, skipping drinking task sound");
+      return;
+    }
+    if (this.sounds.drinking) {
+      this.sounds.drinking.currentTime = 0;
+      this.sounds.drinking.play().catch(e => {
+        console.error("Error playing drinking task sound:", e);
+      });
+    } else {
+      console.error("Drinking task sound not loaded!");
+    }
+  },
+  
+  // Play smoking task sound
+  playSmokingTask() {
+    console.log("🎵 PlaySmokingTask called");
+    if (!this.soundEffectsEnabled) {
+      console.log("Sound effects disabled, skipping smoking task sound");
+      return;
+    }
+    if (this.sounds.smoking) {
+      this.sounds.smoking.currentTime = 0;
+      this.sounds.smoking.play().catch(e => {
+        console.error("Error playing smoking task sound:", e);
+      });
+    } else {
+      console.error("Smoking task sound not loaded!");
+    }
+  },
+  
   // Play a specific sound
   playSound(soundName) {
     try {
@@ -350,6 +402,14 @@ const Audio = {
     // Update task sounds volume
     if (this.sounds.eating) this.sounds.eating.volume = volume * 0.4;
     if (this.sounds.poker) this.sounds.poker.volume = volume * 0.4;
+    if (this.sounds.drinking) this.sounds.drinking.volume = volume * 0.4;
+    if (this.sounds.smoking) this.sounds.smoking.volume = volume * 0.4;
+  },
+  
+  // Play dancing task sound (currently no sound, just a stub)
+  playDancingTask() {
+    // Ide később lehet táncolás hangot tenni
+    console.log("🎵 PlayDancingTask called (no sound)");
   }
 };
 

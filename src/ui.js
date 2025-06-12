@@ -399,46 +399,24 @@ const UI = {
   // Update task list
   updateTaskList(tasks) {
     try {
-      const tasksList = document.getElementById('tasks');
+      const tasksList = document.getElementById('task-list');
       if (!tasksList) return;
-      
-      // Clear the list
       tasksList.innerHTML = '';
-      
-      // Add each task
-      if (tasks && tasks.length > 0) {
-        tasks.forEach(task => {
-          const li = document.createElement('li');
-          
-          // Translate task types to Hungarian
-          const taskNames = {
-            'dance': 'Tánc',
-            'eat': 'Evés',
-            'cards': 'Kártyázás',
-            'toilet': 'WC',
-            'smoke': 'Dohányzás',
-            'drink': 'Ivás'
-          };
-          
-          const roomNames = {
-            'red': 'Vörös',
-            'blue': 'Kék',
-            'green': 'Zöld',
-            'orange': 'Narancssárga',
-            'white': 'Fehér',
-            'purple': 'Lila',
-            'black': 'Fekete'
-          };
-          
-          li.textContent = `${taskNames[task.id] || task.id} (${roomNames[task.room] || task.room})`;
-          tasksList.appendChild(li);
-        });
-      } else {
-        // Show a message if no tasks
+      // Csak a három fő taskot jelenítjük meg
+      const allTasks = [
+        { id: 'cards', name: 'Kártyázás', icon: 'assets/images/task/poker_icon.png' },
+        { id: 'eating', name: 'Evés', icon: 'assets/images/task/eating_icon.png' },
+        { id: 'dancing', name: 'Táncolás', icon: 'assets/images/task/dancing_icon.png' }
+      ];
+      allTasks.forEach(task => {
         const li = document.createElement('li');
-        li.textContent = 'Nincsenek feladatok';
+        const img = document.createElement('img');
+        img.src = task.icon;
+        img.alt = task.name;
+        li.appendChild(img);
+        li.appendChild(document.createTextNode(task.name));
         tasksList.appendChild(li);
-      }
+      });
     } catch (error) {
       console.error("Error updating task list:", error);
     }
@@ -816,6 +794,36 @@ const TaskBar = {
     this.taskIcons.poker.onerror = (e) => {
       console.error("✗ Error loading poker_icon.png:", e);
     };
+    
+    // Load drinking icon
+    this.taskIcons.drinking = new Image();
+    this.taskIcons.drinking.src = 'assets/images/task/drinking_icon.png';
+    this.taskIcons.drinking.onload = () => {
+      console.log("✓ drinking_icon.png loaded successfully");
+    };
+    this.taskIcons.drinking.onerror = (e) => {
+      console.error("✗ Error loading drinking_icon.png:", e);
+    };
+    
+    // Load smoking icon
+    this.taskIcons.smoking = new Image();
+    this.taskIcons.smoking.src = 'assets/images/task/smoking_icon.png';
+    this.taskIcons.smoking.onload = () => {
+      console.log("✓ smoking_icon.png loaded successfully");
+    };
+    this.taskIcons.smoking.onerror = (e) => {
+      console.error("✗ Error loading smoking_icon.png:", e);
+    };
+    
+    // Load dancing icon
+    this.taskIcons.dancing = new Image();
+    this.taskIcons.dancing.src = 'assets/images/task/dancing_icon.png';
+    this.taskIcons.dancing.onload = () => {
+      console.log("✓ dancing_icon.png loaded successfully");
+    };
+    this.taskIcons.dancing.onerror = (e) => {
+      console.error("✗ Error loading dancing_icon.png:", e);
+    };
   },
 
   // Task zone definitions for each room (x coordinates relative to room start)
@@ -840,6 +848,20 @@ const TaskBar = {
       endX: 1320,   // Dance floor end position in room (expanded)
       roomIndex: 6, // Blue room is at index 6
       id: 'dancing' // Unique task ID
+    },
+    'purple': {
+      name: 'Bárpult',
+      startX: 700, // Bar start position in room (becsült)
+      endX: 1260,  // Bar end position in room (becsült)
+      roomIndex: 1, // Purple room is at index 1
+      id: 'drinking' // Unique task ID
+    },
+    'white': {
+      name: 'Kanapé',
+      startX: 500, // Sofa start position in room (becsült)
+      endX: 1200,  // Sofa end position in room (becsült)
+      roomIndex: 2, // White room is at index 2
+      id: 'smoking' // Unique task ID
     }
   },
 
@@ -943,7 +965,15 @@ const TaskBar = {
         case 'cards':
           window.Audio.playPokerTask();
           break;
-        // No sound for dancing task as we don't have a dance sound yet
+        case 'drinking':
+          window.Audio.playDrinkingTask();
+          break;
+        case 'smoking':
+          window.Audio.playSmokingTask();
+          break;
+        case 'dancing':
+          window.Audio.playDancingTask();
+          break;
       }
     }
     
@@ -1145,6 +1175,15 @@ const TaskBar = {
           break;
         case 'cards':
           taskIcon = this.taskIcons.poker;
+          break;
+        case 'drinking':
+          taskIcon = this.taskIcons.drinking;
+          break;
+        case 'smoking':
+          taskIcon = this.taskIcons.smoking;
+          break;
+        case 'dancing':
+          taskIcon = this.taskIcons.dancing;
           break;
       }
       

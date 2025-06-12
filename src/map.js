@@ -34,7 +34,7 @@ const Map = {
     { id: 'blue', name: 'Kék', color: '#4169E1', x: 6 }
   ],
   
-  // Room settings - alapértelmezett 1920x1080, de skálázható
+  // Room settings
   roomWidth: 1920,
   roomHeight: 1080,
   currentRoom: 0,
@@ -234,12 +234,12 @@ const Map = {
       } else if (room.id === 'green' && this.roomImages.green && this.roomImages.green.complete) {
         // Draw the PNG background for green room
         this.ctx.drawImage(this.roomImages.green, roomX, roomY, this.roomWidth, this.roomHeight);
-      } else if (room.id === 'purple' && this.roomImages.purple && this.roomImages.purple.complete) {
-        // Draw the PNG background for purple room
-        this.ctx.drawImage(this.roomImages.purple, roomX, roomY, this.roomWidth, this.roomHeight);
       } else if (room.id === 'white' && this.roomImages.white && this.roomImages.white.complete) {
         // Draw the PNG background for white room
         this.ctx.drawImage(this.roomImages.white, roomX, roomY, this.roomWidth, this.roomHeight);
+      } else if (room.id === 'purple' && this.roomImages.purple && this.roomImages.purple.complete) {
+        // Draw the PNG background for purple room
+        this.ctx.drawImage(this.roomImages.purple, roomX, roomY, this.roomWidth, this.roomHeight);
       } else {
         // Regular room background for other rooms
         this.ctx.fillStyle = room.color;
@@ -285,99 +285,155 @@ const Map = {
     
     // Restore context
     this.ctx.restore();
+    this.drawMinimap(playerX, playerY);
+    // Task lista a jobb felső sarokban, a mini-map alatt
+    const taskListWidth = 260;
+    const taskListX = this.canvas.width - taskListWidth - 15;
+    const taskListY = 65; // minimap alatt
+    this.drawTaskList(taskListX, taskListY, taskListWidth);
   },
   
   // Draw minimap in top-right corner
   drawMinimap(playerX = 960, playerY = 540) {
     if (!this.ctx) return;
     
-    const minimapWidth = 200;
-    const minimapHeight = 100;
-    const minimapX = this.canvas.width - minimapWidth - 20;
-    const minimapY = 20;
-    const roomWidth = minimapWidth / this.rooms.length;
+    const roomSize = 30;
+    const roomSpacing = 32;
+    const totalWidth = 7 * roomSpacing - 2;
+    const padding = 8;
     
-    // Draw minimap background
-    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    const minimapWidth = totalWidth + (padding * 2);
+    const minimapHeight = roomSize + (padding * 2);
+    const minimapX = this.canvas.width - minimapWidth - 15;
+    const minimapY = 15;
+    
+    this.ctx.fillStyle = 'rgba(26, 0, 0, 0.9)';
     this.ctx.fillRect(minimapX, minimapY, minimapWidth, minimapHeight);
     
-    // Draw rooms in minimap
+    this.ctx.strokeStyle = '#8b0000';
+    this.ctx.lineWidth = 2;
+    this.ctx.strokeRect(minimapX, minimapY, minimapWidth, minimapHeight);
+    
+    const roomsStartX = minimapX + padding;
+    const roomsY = minimapY + padding;
+    
     this.rooms.forEach((room, index) => {
-      const roomX = minimapX + (index * roomWidth);
-      this.ctx.fillStyle = room.color;
-      this.ctx.fillRect(roomX, minimapY, roomWidth, minimapHeight);
+      const roomX = roomsStartX + (index * roomSpacing);
       
-      // Room border
-      this.ctx.strokeStyle = '#FFFFFF';
+      this.ctx.fillStyle = room.color;
+      this.ctx.fillRect(roomX, roomsY, roomSize, roomSize);
+      
+      this.ctx.strokeStyle = '#8b0000';
       this.ctx.lineWidth = 1;
-      this.ctx.strokeRect(roomX, minimapY, roomWidth, minimapHeight);
+      this.ctx.strokeRect(roomX, roomsY, roomSize, roomSize);
+      
+      if (index === this.currentRoom) {
+        this.ctx.strokeStyle = '#gold';
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeRect(roomX - 1, roomsY - 1, roomSize + 2, roomSize + 2);
+      }
     });
     
-    // Draw player position in minimap
-    const playerMinimapX = minimapX + ((playerX / (this.roomWidth * this.rooms.length)) * minimapWidth);
-    const playerMinimapY = minimapY + (minimapHeight / 2);
+    const playerMinimapX = roomsStartX + (this.currentRoom * roomSpacing) + roomSize / 2;
+    const playerMinimapY = roomsY + roomSize / 2;
     
-    this.ctx.fillStyle = '#FF0000';
+    this.ctx.fillStyle = '#FFD700';
+    this.ctx.strokeStyle = '#8b0000';
+    this.ctx.lineWidth = 1;
     this.ctx.beginPath();
-    this.ctx.arc(playerMinimapX, playerMinimapY, 4, 0, Math.PI * 2);
+    this.ctx.arc(playerMinimapX, playerMinimapY, 4, 0, 2 * Math.PI);
     this.ctx.fill();
+    this.ctx.stroke();
   },
   
   // Draw task list
   drawTaskList(x, y, width) {
-    if (!this.ctx) return;
+    if (!this.ctx || !window.TaskBar) return;
     
     const tasks = [
-      { text: "Találd meg a gyilkost!", completed: false },
-      { text: "Gyűjts információt!", completed: false },
-      { text: "Beszélj a nemesekkel!", completed: false },
-      { text: "Fedezd fel a szobákat!", completed: false }
+      { id: 'cards', name: 'Kártyázás', icon: 'poker_icon.png', completed: window.TaskBar.isTaskCompleted('cards'), room: 'green' },
+      { id: 'dining', name: 'Evés', icon: 'eating_icon.png', completed: window.TaskBar.isTaskCompleted('dining'), room: 'red' },
+      { id: 'dancing', name: 'Táncolás', icon: 'dancing_icon.png', completed: window.TaskBar.isTaskCompleted('dancing'), room: 'blue' },
+      { id: 'drinking', name: 'Ivás', icon: 'drinking_icon.png', completed: window.TaskBar.isTaskCompleted('drinking'), room: 'purple' },
+      { id: 'smoking', name: 'Dohányzás', icon: 'smoking_icon.png', completed: window.TaskBar.isTaskCompleted('smoking'), room: 'white' }
     ];
     
-    const lineHeight = 30;
-    const padding = 10;
-    const height = (tasks.length * lineHeight) + (padding * 2);
+    const taskHeight = 40; // Magasabb a taskok között a hely az ikonok miatt
+    const padding = 15;
+    const iconSize = 32;
+    const totalHeight = (tasks.length * taskHeight) + (padding * 2) + 40; // Extra hely a címnek
     
-    // Draw background
-    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    this.ctx.fillRect(x, y, width, height);
+    // Háttér
+    this.ctx.fillStyle = 'rgba(26, 0, 0, 0.85)';
+    this.ctx.fillRect(x, y, width, totalHeight);
     
-    // Draw border
+    // Keret
     this.ctx.strokeStyle = '#8b0000';
     this.ctx.lineWidth = 2;
-    this.ctx.strokeRect(x, y, width, height);
+    this.ctx.strokeRect(x, y, width, totalHeight);
     
-    // Draw title
-    this.ctx.fillStyle = '#FFFFFF';
-    this.ctx.font = '24px MedievalSharp';
-    this.ctx.textAlign = 'left';
-    this.ctx.fillText("Feladatok:", x + padding, y + padding + 20);
+    // Cím
+    this.ctx.fillStyle = '#FFD700';
+    this.ctx.font = 'bold 20px MedievalSharp';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText('FELADATOK', x + width / 2, y + 30);
     
-    // Draw tasks
-    this.ctx.font = '18px MedievalSharp';
+    // Task lista
     tasks.forEach((task, index) => {
-      const taskY = y + padding + 50 + (index * lineHeight);
+      const taskY = y + 50 + (index * taskHeight);
       
-      // Checkbox
-      this.ctx.strokeStyle = '#FFFFFF';
-      this.ctx.lineWidth = 2;
-      this.ctx.strokeRect(x + padding, taskY - 12, 16, 16);
+      // Task háttér
+      this.ctx.fillStyle = task.completed ? 'rgba(100, 100, 100, 0.3)' : 'rgba(0, 0, 0, 0.3)';
+      this.ctx.fillRect(x + padding, taskY, width - (padding * 2), taskHeight - 5);
       
-      if (task.completed) {
-        this.ctx.fillStyle = '#FFFFFF';
-        this.ctx.fillRect(x + padding + 3, taskY - 9, 10, 10);
+      // Task keret
+      this.ctx.strokeStyle = task.completed ? '#666666' : '#8b0000';
+      this.ctx.lineWidth = 1;
+      this.ctx.strokeRect(x + padding, taskY, width - (padding * 2), taskHeight - 5);
+      
+      // Ikon betöltése és rajzolása
+      const icon = new Image();
+      icon.src = `assets/images/task/${task.icon}`;
+      if (icon.complete) {
+        this.ctx.drawImage(icon, x + padding + 5, taskY + 4, iconSize, iconSize);
       }
       
-      // Task text
-      this.ctx.fillStyle = '#FFFFFF';
-      this.ctx.fillText(task.text, x + padding + 25, taskY);
+      // Task név
+      this.ctx.fillStyle = task.completed ? '#888888' : '#ffffff';
+      this.ctx.font = '16px MedievalSharp';
+      this.ctx.textAlign = 'left';
+      this.ctx.fillText(task.name, x + padding + iconSize + 15, taskY + 25);
+      
+      // Teljesítettség jelzése
+      if (task.completed) {
+        // Áthúzás
+        this.ctx.strokeStyle = '#888888';
+        this.ctx.lineWidth = 1;
+        this.ctx.beginPath();
+        this.ctx.moveTo(x + padding + iconSize + 15, taskY + 15);
+        this.ctx.lineTo(x + width - padding - 10, taskY + 15);
+        this.ctx.stroke();
+        
+        // Pipajel
+        this.ctx.fillStyle = '#00ff00';
+        this.ctx.font = '20px MedievalSharp';
+        this.ctx.textAlign = 'right';
+        this.ctx.fillText('✓', x + width - padding - 10, taskY + 25);
+      } else if (window.TaskBar.currentTask && window.TaskBar.currentTask.id === task.id) {
+        // Aktív task jelzése
+        this.ctx.fillStyle = '#00ff00';
+        this.ctx.font = '16px MedievalSharp';
+        this.ctx.textAlign = 'right';
+        this.ctx.fillText('▶', x + width - padding - 10, taskY + 25);
+      }
     });
   },
   
   // Get room from position
   getRoomFromPosition(position) {
     const roomIndex = Math.floor(position.x / this.roomWidth);
-    return this.rooms[Math.max(0, Math.min(this.rooms.length - 1, roomIndex))];
+    const clampedIndex = Math.max(0, Math.min(this.rooms.length - 1, roomIndex));
+    return this.rooms[clampedIndex].id;
   },
   
   // Convert screen coordinates to world coordinates
