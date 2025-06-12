@@ -652,11 +652,13 @@ const UI = {
     gallery.style.padding = '10px';
     
     // HARD-CODED karakterek (NO CACHE ISSUES!)
+    console.log('🎭 Setting up character arrays...');
     const allFemaleCharacters = [
       'female1', 'female2', 'female3', 'female4', 'female5', 'female6', 
       'female7', 'female8', 'female9', 'female10', 'female11', 'female12',
-      'female13', 'female14', 'female15' // <<<< EZEK A HIÁNYZÓ KARAKTEREK!
+      'female13', 'female14', 'female15'
     ];
+    console.log('👩 Female characters configured:', allFemaleCharacters);
     
     const allMaleCharacters = [
       'male1', 'male2', 'male3', 'male4', 'male5', 'male6',
@@ -675,7 +677,7 @@ const UI = {
     if (maleBtn) {
       maleBtn.onclick = () => {
         console.log('👨 Male gender button clicked!');
-    gallery.innerHTML = '';
+        gallery.innerHTML = '';
         console.log('📋 Male characters to display:', allMaleCharacters.length);
         
         allMaleCharacters.forEach(charKey => {
@@ -683,50 +685,77 @@ const UI = {
           const img = document.createElement('img');
           img.src = `assets/images/characters/males/${charKey}/idle/${charKey}_idle_facing_right1.png?v=${Date.now()}`;
           img.alt = charKey;
-        img.style.cursor = 'pointer';
+          img.style.cursor = 'pointer';
           img.style.border = '3px solid transparent';
           img.style.borderRadius = '5px';
           img.style.width = '80px';
           img.style.height = '120px';
           img.style.objectFit = 'contain';
-        img.onclick = () => {
+          img.onclick = () => {
             window.selectedCharacter = charKey;
             Array.from(gallery.children).forEach(child => child.style.border = '3px solid transparent');
             img.style.border = '3px solid #FFD700';
             console.log('Selected character:', charKey);
-        };
-        gallery.appendChild(img);
-      });
-    };
+          };
+          gallery.appendChild(img);
+        });
+      };
     }
     
     if (femaleBtn) {
       femaleBtn.onclick = () => {
         console.log('🚺 Female gender button clicked! - NEW VERSION');
-      gallery.innerHTML = '';
+        gallery.innerHTML = '';
         console.log('📋 Female characters to display:', allFemaleCharacters.length);
         
-        allFemaleCharacters.forEach(charKey => {
-          console.log('➕ Adding female character:', charKey);
-        const img = document.createElement('img');
-          img.src = `assets/images/characters/females/${charKey}/idle/${charKey}_idle_facing_right1.png`;
-          img.alt = charKey;
-        img.style.cursor = 'pointer';
-          img.style.border = '3px solid transparent';
-          img.style.borderRadius = '5px';
-          img.style.width = '80px';
-          img.style.height = '120px';
-          img.style.objectFit = 'contain';
-        img.onclick = () => {
-            window.selectedCharacter = charKey;
-            Array.from(gallery.children).forEach(child => child.style.border = '3px solid transparent');
-            img.style.border = '3px solid #FFD700';
-            console.log('Selected character:', charKey);
-        };
-        gallery.appendChild(img);
-      });
-    };
-  }
+        // Preload images first
+        const preloadPromises = allFemaleCharacters.map((charKey, index) => {
+          return new Promise((resolve, reject) => {
+            const img = new Image();
+            const imgPath = `assets/images/characters/females/${charKey}/idle/${charKey}_idle_facing_right1.png?v=${Date.now()}`;
+            console.log(`🔄 Preloading female character ${index + 1}/${allFemaleCharacters.length}: ${charKey}`);
+            
+            img.onload = () => {
+              console.log(`✅ Successfully preloaded: ${charKey}`);
+              resolve({ charKey, img, success: true });
+            };
+            
+            img.onerror = () => {
+              console.error(`❌ Failed to preload: ${charKey}`);
+              resolve({ charKey, success: false });
+            };
+            
+            img.src = imgPath;
+          });
+        });
+        
+        // Wait for all images to preload then add them to gallery
+        Promise.all(preloadPromises).then(results => {
+          results.forEach(result => {
+            if (result.success) {
+              const img = document.createElement('img');
+              img.src = result.img.src;
+              img.alt = result.charKey;
+              img.style.cursor = 'pointer';
+              img.style.border = '3px solid transparent';
+              img.style.borderRadius = '5px';
+              img.style.width = '80px';
+              img.style.height = '120px';
+              img.style.objectFit = 'contain';
+              img.onclick = () => {
+                window.selectedCharacter = result.charKey;
+                Array.from(gallery.children).forEach(child => child.style.border = '3px solid transparent');
+                img.style.border = '3px solid #FFD700';
+                console.log('Selected character:', result.charKey);
+              };
+              gallery.appendChild(img);
+            }
+          });
+          
+          console.log('✨ Gallery population complete!');
+        });
+      };
+    }
     
     if (specialBtn) {
       specialBtn.onclick = () => {

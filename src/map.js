@@ -6,10 +6,12 @@ const Map = {
   
   // Room background images
   roomImages: {
-    blue: null, // A kék szoba képe
-    red: null,  // A piros szoba képe
-    orange: null, // A narancssárga szoba képe
-    green: null   // A zöld szoba képe
+    blue: null,    // A kék szoba képe
+    red: null,     // A piros szoba képe
+    orange: null,  // A narancssárga szoba képe
+    green: null,   // A zöld szoba képe
+    white: null,   // A fehér szoba képe
+    purple: null   // A lila szoba képe
   },
   
   // Camera system
@@ -98,6 +100,28 @@ const Map = {
     };
     this.roomImages.green.onerror = () => {
       console.error('Failed to load green room image');
+    };
+    
+    this.roomImages.white = new Image();
+    this.roomImages.white.src = 'assets/images/map/white_room.png';
+    this.roomImages.white.onload = () => {
+      console.log('White room image loaded');
+      console.log('White room image size:', this.roomImages.white.width + 'x' + this.roomImages.white.height);
+      console.log('Room size should be:', this.roomWidth + 'x' + this.roomHeight);
+    };
+    this.roomImages.white.onerror = () => {
+      console.error('Failed to load white room image');
+    };
+    
+    this.roomImages.purple = new Image();
+    this.roomImages.purple.src = 'assets/images/map/purple_room.png';
+    this.roomImages.purple.onload = () => {
+      console.log('Purple room image loaded');
+      console.log('Purple room image size:', this.roomImages.purple.width + 'x' + this.roomImages.purple.height);
+      console.log('Room size should be:', this.roomWidth + 'x' + this.roomHeight);
+    };
+    this.roomImages.purple.onerror = () => {
+      console.error('Failed to load purple room image');
     };
     
     // Start in black room (index 0)
@@ -210,6 +234,12 @@ const Map = {
       } else if (room.id === 'green' && this.roomImages.green && this.roomImages.green.complete) {
         // Draw the PNG background for green room
         this.ctx.drawImage(this.roomImages.green, roomX, roomY, this.roomWidth, this.roomHeight);
+      } else if (room.id === 'purple' && this.roomImages.purple && this.roomImages.purple.complete) {
+        // Draw the PNG background for purple room
+        this.ctx.drawImage(this.roomImages.purple, roomX, roomY, this.roomWidth, this.roomHeight);
+      } else if (room.id === 'white' && this.roomImages.white && this.roomImages.white.complete) {
+        // Draw the PNG background for white room
+        this.ctx.drawImage(this.roomImages.white, roomX, roomY, this.roomWidth, this.roomHeight);
       } else {
         // Regular room background for other rooms
         this.ctx.fillStyle = room.color;
@@ -223,11 +253,11 @@ const Map = {
         
         // Floor border/edge
         this.ctx.strokeStyle = '#654321';
-      this.ctx.lineWidth = 2;
-      this.ctx.beginPath();
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
         this.ctx.moveTo(roomX, floorY);
         this.ctx.lineTo(roomX + this.roomWidth, floorY);
-      this.ctx.stroke();
+        this.ctx.stroke();
       }
       
       // Room border
@@ -244,7 +274,7 @@ const Map = {
     
     // Draw room transitions (vertical lines between rooms)
     this.ctx.strokeStyle = '#8b0000';
-      this.ctx.lineWidth = 2;
+    this.ctx.lineWidth = 2;
     for (let i = 1; i < this.rooms.length; i++) {
       const lineX = i * this.roomWidth;
       this.ctx.beginPath();
@@ -255,156 +285,102 @@ const Map = {
     
     // Restore context
     this.ctx.restore();
-    
-    // Draw minimap (top-right corner)
-    this.drawMinimap(playerX, playerY);
   },
   
   // Draw minimap in top-right corner
   drawMinimap(playerX = 960, playerY = 540) {
-    // Room squares setup
-    const roomSize = 30;
-    const roomSpacing = 32;
-    const totalWidth = 7 * roomSpacing - 2; // 7 szoba - utolsó spacing
-    const padding = 8;
+    if (!this.ctx) return;
     
-    const minimapWidth = totalWidth + (padding * 2);
-    const minimapHeight = roomSize + (padding * 2);
-    const minimapX = this.canvas.width - minimapWidth - 15;
-    const minimapY = 15;
+    const minimapWidth = 200;
+    const minimapHeight = 100;
+    const minimapX = this.canvas.width - minimapWidth - 20;
+    const minimapY = 20;
+    const roomWidth = minimapWidth / this.rooms.length;
     
-    // Medieval style frame background
-    this.ctx.fillStyle = 'rgba(26, 0, 0, 0.9)';
+    // Draw minimap background
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
     this.ctx.fillRect(minimapX, minimapY, minimapWidth, minimapHeight);
     
-    // Thin border
-    this.ctx.strokeStyle = '#8b0000';
-    this.ctx.lineWidth = 2;
-    this.ctx.strokeRect(minimapX, minimapY, minimapWidth, minimapHeight);
-    
-    // Draw room squares
-    const roomsStartX = minimapX + padding;
-    const roomsY = minimapY + padding;
-    
+    // Draw rooms in minimap
     this.rooms.forEach((room, index) => {
-      const roomX = roomsStartX + (index * roomSpacing);
-      
-      // Room background
+      const roomX = minimapX + (index * roomWidth);
       this.ctx.fillStyle = room.color;
-      this.ctx.fillRect(roomX, roomsY, roomSize, roomSize);
+      this.ctx.fillRect(roomX, minimapY, roomWidth, minimapHeight);
       
       // Room border
-      this.ctx.strokeStyle = '#8b0000';
+      this.ctx.strokeStyle = '#FFFFFF';
       this.ctx.lineWidth = 1;
-      this.ctx.strokeRect(roomX, roomsY, roomSize, roomSize);
-      
-      // Highlight current room
-      if (index === this.currentRoom) {
-        this.ctx.strokeStyle = '#gold';
-        this.ctx.lineWidth = 2;
-        this.ctx.strokeRect(roomX - 1, roomsY - 1, roomSize + 2, roomSize + 2);
-      }
+      this.ctx.strokeRect(roomX, minimapY, roomWidth, minimapHeight);
     });
     
-    // Draw player dot - always in center of current room
-    const playerMinimapX = roomsStartX + (this.currentRoom * roomSpacing) + roomSize / 2;
-    const playerMinimapY = roomsY + roomSize / 2;
+    // Draw player position in minimap
+    const playerMinimapX = minimapX + ((playerX / (this.roomWidth * this.rooms.length)) * minimapWidth);
+    const playerMinimapY = minimapY + (minimapHeight / 2);
     
-    // Draw player dot (sárga pötty)
-    this.ctx.fillStyle = '#FFD700';
-    this.ctx.strokeStyle = '#8b0000';
-    this.ctx.lineWidth = 1;
+    this.ctx.fillStyle = '#FF0000';
     this.ctx.beginPath();
-    this.ctx.arc(playerMinimapX, playerMinimapY, 4, 0, 2 * Math.PI);
+    this.ctx.arc(playerMinimapX, playerMinimapY, 4, 0, Math.PI * 2);
     this.ctx.fill();
-    this.ctx.stroke();
-    
-    // Player dot glow effect
-    this.ctx.shadowColor = '#FFD700';
-    this.ctx.shadowBlur = 6;
-    this.ctx.beginPath();
-    this.ctx.arc(playerMinimapX, playerMinimapY, 2, 0, 2 * Math.PI);
-    this.ctx.fill();
-    this.ctx.shadowBlur = 0;
-    
-    // Reset text alignment
-    this.ctx.textAlign = 'left';
-    
-    // Draw task list below minimap (shorter width, better readability)
-    this.drawTaskList(minimapX + 20, minimapY + minimapHeight + 10, minimapWidth - 40);
   },
   
-  // Draw task list below minimap
+  // Draw task list
   drawTaskList(x, y, width) {
-    if (!window.TaskBar) return;
+    if (!this.ctx) return;
     
-    const tasks = window.TaskBar.getTaskList();
-    const taskHeight = 24; // Increased spacing between tasks
-    const titleHeight = 28; // More space for title + margin
-    const padding = 10; // Increased padding
-    const totalHeight = tasks.length * taskHeight + titleHeight + (padding * 2);
+    const tasks = [
+      { text: "Találd meg a gyilkost!", completed: false },
+      { text: "Gyűjts információt!", completed: false },
+      { text: "Beszélj a nemesekkel!", completed: false },
+      { text: "Fedezd fel a szobákat!", completed: false }
+    ];
     
-    // Background
-    this.ctx.fillStyle = 'rgba(26, 0, 0, 0.9)';
-    this.ctx.fillRect(x, y, width, totalHeight);
+    const lineHeight = 30;
+    const padding = 10;
+    const height = (tasks.length * lineHeight) + (padding * 2);
     
-    // Border
+    // Draw background
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    this.ctx.fillRect(x, y, width, height);
+    
+    // Draw border
     this.ctx.strokeStyle = '#8b0000';
     this.ctx.lineWidth = 2;
-    this.ctx.strokeRect(x, y, width, totalHeight);
+    this.ctx.strokeRect(x, y, width, height);
     
-    // Title
-    this.ctx.fillStyle = '#FFD700';
-    this.ctx.font = '15px MedievalSharp'; // Slightly increased font size
-    this.ctx.textAlign = 'center';
-    this.ctx.fillText('FELADATOK', x + width / 2, y + 18);
-    
-    // Task list
+    // Draw title
+    this.ctx.fillStyle = '#FFFFFF';
+    this.ctx.font = '24px MedievalSharp';
     this.ctx.textAlign = 'left';
-    this.ctx.font = '12px MedievalSharp'; // Increased font size
+    this.ctx.fillText("Feladatok:", x + padding, y + padding + 20);
     
+    // Draw tasks
+    this.ctx.font = '18px MedievalSharp';
     tasks.forEach((task, index) => {
-      const taskY = y + titleHeight + padding + (index * taskHeight);
+      const taskY = y + padding + 50 + (index * lineHeight);
       
-      // Task status color
+      // Checkbox
+      this.ctx.strokeStyle = '#FFFFFF';
+      this.ctx.lineWidth = 2;
+      this.ctx.strokeRect(x + padding, taskY - 12, 16, 16);
+      
       if (task.completed) {
-        this.ctx.fillStyle = '#888888'; // Gray for completed
-      } else if (window.TaskBar.currentTask && window.TaskBar.currentTask.id === task.id) {
-        this.ctx.fillStyle = '#00ff00'; // Green for current task
-      } else {
-        this.ctx.fillStyle = '#ffffff'; // White for pending
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.fillRect(x + padding + 3, taskY - 9, 10, 10);
       }
       
-      // Task status symbol
-      const statusSymbol = task.completed ? '✅' : '◯';
-      this.ctx.fillText(statusSymbol, x + 8, taskY);
-      
-      // Task name
-      this.ctx.fillText(task.name, x + 28, taskY);
-      
-      // Strike-through for completed tasks
-      if (task.completed) {
-        this.ctx.strokeStyle = '#888888';
-        this.ctx.lineWidth = 1;
-        this.ctx.beginPath();
-        this.ctx.moveTo(x + 28, taskY - 4);
-        this.ctx.lineTo(x + width - 8, taskY - 4);
-        this.ctx.stroke();
-      }
+      // Task text
+      this.ctx.fillStyle = '#FFFFFF';
+      this.ctx.fillText(task.text, x + padding + 25, taskY);
     });
-    
-    // Reset text alignment
-    this.ctx.textAlign = 'left';
   },
   
-  // Get room ID from world position
+  // Get room from position
   getRoomFromPosition(position) {
     const roomIndex = Math.floor(position.x / this.roomWidth);
-    const clampedIndex = Math.max(0, Math.min(this.rooms.length - 1, roomIndex));
-    return this.rooms[clampedIndex].id;
+    return this.rooms[Math.max(0, Math.min(this.rooms.length - 1, roomIndex))];
   },
   
-  // Get world position from screen position
+  // Convert screen coordinates to world coordinates
   screenToWorld(screenX, screenY) {
     return {
       x: screenX + this.camera.x,
@@ -412,13 +388,13 @@ const Map = {
     };
   },
   
-  // Get screen position from world position
+  // Convert world coordinates to screen coordinates
   worldToScreen(worldX, worldY) {
     return {
       x: worldX - this.camera.x,
       y: worldY - this.camera.y
     };
-  },
+  }
 };
 
 export default Map; 
