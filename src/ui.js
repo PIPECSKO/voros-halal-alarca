@@ -851,15 +851,15 @@ const TaskBar = {
     },
     'purple': {
       name: 'Bárpult',
-      startX: 700, // Bar start position in room (becsült)
-      endX: 1260,  // Bar end position in room (becsült)
+      startX: 488, // Bar start position in room (15% margin)
+      endX: 1432,  // Bar end position in room (15% margin)
       roomIndex: 1, // Purple room is at index 1
       id: 'drinking' // Unique task ID
     },
     'white': {
       name: 'Kanapé',
-      startX: 500, // Sofa start position in room (becsült)
-      endX: 1200,  // Sofa end position in room (becsült)
+      startX: 672, // Sofa start position in room (80% margin)
+      endX: 1248,  // Sofa end position in room (80% margin)
       roomIndex: 2, // White room is at index 2
       id: 'smoking' // Unique task ID
     }
