@@ -127,12 +127,53 @@ const Animation = {
       }
     }
     
-    // Task animáció csak female1-hez
+    // Task animáció female1 és female2-hez
+    this.frames.task = [];
     if (this.character === 'female1') {
       for (let i = 1; i <= 5; i++) {
         const img = new Image();
         img.src = `assets/images/characters/females/female1/animation/female1_animation${i}.png`;
         img.onerror = () => console.error(`Failed to load female1 task animation frame ${i}`);
+        this.frames.task.push(img);
+      }
+    }
+    if (this.character === 'female2') {
+      for (let i = 1; i <= 5; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/females/female2/animation/female2_animation${i}.png`;
+        img.onerror = () => console.error(`Failed to load female2 task animation frame ${i}`);
+        this.frames.task.push(img);
+      }
+    }
+    if (this.character === 'female3') {
+      for (let i = 1; i <= 5; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/females/female3/animation/female3_animation${i}.png`;
+        img.onerror = () => console.error(`Failed to load female3 task animation frame ${i}`);
+        this.frames.task.push(img);
+      }
+    }
+    if (this.character === 'female4') {
+      for (let i = 1; i <= 5; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/females/female4/animation/female4_animation${i}.png`;
+        img.onerror = () => console.error(`Failed to load female4 task animation frame ${i}`);
+        this.frames.task.push(img);
+      }
+    }
+    if (this.character === 'female5') {
+      for (let i = 1; i <= 5; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/females/female5/animation/female5_animation${i}.png`;
+        img.onerror = () => console.error(`Failed to load female5 task animation frame ${i}`);
+        this.frames.task.push(img);
+      }
+    }
+    if (this.character === 'female6') {
+      for (let i = 1; i <= 5; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/females/female6/animation/female6_animation${i}.png`;
+        img.onerror = () => console.error(`Failed to load female6 task animation frame ${i}`);
         this.frames.task.push(img);
       }
     }
@@ -178,8 +219,8 @@ const Animation = {
     if (!frames || frames.length === 0) return;
     const frame = frames[currentFrame % frames.length];
     
-    // ÚJ: female1 task animáció
-    if (char === 'female1' && window.Player && window.Player.isTasking && this.frames.task && this.frames.task.length > 0) {
+    // ÚJ: female1 és female2 task animáció
+    if ((char === 'female1' || char === 'female2' || char === 'female3' || char === 'female4' || char === 'female5' || char === 'female6') && window.Player && window.Player.isTasking && this.frames.task && this.frames.task.length > 0) {
       // Task animáció frame index számítása (idő alapján, 8 fps)
       const now = Date.now();
       const frameIdx = Math.floor((now / 125) % this.frames.task.length);
