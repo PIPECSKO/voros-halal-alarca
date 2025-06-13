@@ -10,17 +10,6 @@ Egy kastélyban tartott bálon a játékosok különböző szerepeket játszanak
 - **👥 Nép**: Teljesítik a feladatokat és túlélésért küzdenek  
 - **☠️ Pestis**: Titokban fertőz és megöl másokat
 
-## 🚀 Online Játék Indítása
-
-### Glitch.com (Ajánlott - Ingyenes)
-
-1. **Menj ide:** https://glitch.com
-2. **Kattints:** "New Project" → "Import from GitHub"
-3. **Add meg:** a GitHub repo URL-t
-4. **Várj 1-2 percet** - automatikusan elindul!
-5. **Kapsz egy URL-t:** `https://your-project.glitch.me`
-
-**Részletes útmutató:** [GLITCH_SETUP.md](GLITCH_SETUP.md)
 
 ## 🏠 Helyi Fejlesztés
 
@@ -82,5 +71,3 @@ MIT License - Lásd [LICENSE](LICENSE) fájlt.
 A játék a Universal LPC Spritesheet-et használja (CC-BY-SA 3.0).
 
 ---
-
-**🎮 Játssz online:** https://glitch.com → Import this project! 
