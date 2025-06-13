@@ -2419,17 +2419,22 @@ const Game = {
   handleDied(deathData) {
     console.log('You died:', deathData);
     this.playerState = 'ghost';
-    
+    // Body hozzáadása a Game.bodies-hoz, ha még nincs
+    if (this.bodies && !this.bodies['self']) {
+      this.bodies['self'] = {
+        x: window.Player ? window.Player.x : (deathData.x || 0),
+        y: window.Player ? window.Player.y : (deathData.y || 0),
+        character: window.Player ? window.Player.character : (deathData.character || 'female1')
+      };
+    }
     // Show death message
     const deathMessages = {
       'plague': 'Pestits áldozata lettél',
       'prince': 'Őfelsége nem talált megbízhatónak',
       'tasks': 'Unod a bált?! Menj és halj meg kint a Pestistben. (Elhagytad a kastélyt)'
     };
-    
     const message = deathMessages[deathData.cause] || 'Meghaltál';
     alert(message);
-    
     // Disable action buttons
     UI.toggleActionButton('task-button', false);
     UI.toggleActionButton('clean-body-button', false);
@@ -2774,7 +2779,9 @@ const Game = {
     // Draw all bodies
     for (let bodyId in this.bodies) {
       const body = this.bodies[bodyId];
-      Player.drawBody(body);
+      if (body) {
+        Player.drawBody(body);
+      }
     }
   },
   

@@ -60,56 +60,69 @@ const Animation = {
     this.frames.idle.left = [];
     this.frames.idle.right = [];
     for (let i = 1; i <= idleFrameCount; i++) {
-      const imgL = new Image();
-      const imgR = new Image();
-      
       if (this.character === 'ghost') {
-        // Ghost uses different naming convention
-        imgL.src = `assets/images/characters/${genderFolder}/idle/${this.character}_idle${i}.png`;
-        imgR.src = `assets/images/characters/${genderFolder}/idle/${this.character}_idle${i}.png`; // Same image for both directions
+        // Ghost: fix útvonal, nem genderFolder!
+        const img = new Image();
+        img.src = `assets/images/characters/ghost/idle/ghost_idle${i}.png`;
+        img.onerror = () => console.error(`Failed to load ghost idle frame ${i}`);
+        this.frames.idle.left.push(img);
+        this.frames.idle.right.push(img);
       } else if (this.character === 'prince') {
-        // Prince uses direct folder structure
-        imgL.src = `assets/images/characters/${genderFolder}/idle/${this.character}_idle_facing_left${i}.png`;
-        imgR.src = `assets/images/characters/${genderFolder}/idle/${this.character}_idle_facing_right${i}.png`;
+        const imgL = new Image();
+        const imgR = new Image();
+        imgL.src = `assets/images/characters/prince/idle/prince_idle_facing_left${i}.png`;
+        imgR.src = `assets/images/characters/prince/idle/prince_idle_facing_right${i}.png`;
+        imgL.onerror = () => console.error(`Failed to load left idle frame ${i} for ${this.character}`);
+        imgR.onerror = () => console.error(`Failed to load right idle frame ${i} for ${this.character}`);
+        this.frames.idle.left.push(imgL);
+        this.frames.idle.right.push(imgR);
       } else {
+        const genderFolder = this.character.startsWith('female') ? 'females' : 'males';
+        const imgL = new Image();
+        const imgR = new Image();
         imgL.src = `assets/images/characters/${genderFolder}/${this.character}/idle/${this.character}_idle_facing_left${i}.png?v=${Date.now()}`;
         imgR.src = `assets/images/characters/${genderFolder}/${this.character}/idle/${this.character}_idle_facing_right${i}.png?v=${Date.now()}`;
-        console.log(`Loading idle frames for ${this.character}: ${imgL.src}, ${imgR.src}`);
+        imgL.onerror = () => console.error(`Failed to load left idle frame ${i} for ${this.character}`);
+        imgR.onerror = () => console.error(`Failed to load right idle frame ${i} for ${this.character}`);
+        this.frames.idle.left.push(imgL);
+        this.frames.idle.right.push(imgR);
       }
-      
-      imgL.onerror = () => console.error(`Failed to load left idle frame ${i} for ${this.character}`);
-      imgR.onerror = () => console.error(`Failed to load right idle frame ${i} for ${this.character}`);
-      
-      this.frames.idle.left.push(imgL);
-      this.frames.idle.right.push(imgR);
     }
     
     // Walk frames
     this.frames.walk.left = [];
     this.frames.walk.right = [];
     for (let i = 1; i <= walkFrameCount; i++) {
-      const imgL = new Image();
-      const imgR = new Image();
-      
       if (this.character === 'ghost') {
-        // Ghost uses different naming convention
-        imgL.src = `assets/images/characters/${genderFolder}/walk/${this.character}_walk_facing_left${i}.png`;
-        imgR.src = `assets/images/characters/${genderFolder}/walk/${this.character}_walk_facing_right${i}.png`;
+        // Ghost: fix útvonal, nem genderFolder!
+        const imgL = new Image();
+        const imgR = new Image();
+        imgL.src = `assets/images/characters/ghost/walk/ghost_walk_facing_left${i}.png`;
+        imgR.src = `assets/images/characters/ghost/walk/ghost_walk_facing_right${i}.png`;
+        imgL.onerror = () => console.error(`Failed to load ghost walk left frame ${i}`);
+        imgR.onerror = () => console.error(`Failed to load ghost walk right frame ${i}`);
+        this.frames.walk.left.push(imgL);
+        this.frames.walk.right.push(imgR);
       } else if (this.character === 'prince') {
-        // Prince uses direct folder structure
-        imgL.src = `assets/images/characters/${genderFolder}/walk/${this.character}_walk_facing_left${i}.png`;
-        imgR.src = `assets/images/characters/${genderFolder}/walk/${this.character}_walk_facing_right${i}.png`;
+        const imgL = new Image();
+        const imgR = new Image();
+        imgL.src = `assets/images/characters/prince/walk/prince_walk_facing_left${i}.png`;
+        imgR.src = `assets/images/characters/prince/walk/prince_walk_facing_right${i}.png`;
+        imgL.onerror = () => console.error(`Failed to load left walk frame ${i} for ${this.character}`);
+        imgR.onerror = () => console.error(`Failed to load right walk frame ${i} for ${this.character}`);
+        this.frames.walk.left.push(imgL);
+        this.frames.walk.right.push(imgR);
       } else {
+        const genderFolder = this.character.startsWith('female') ? 'females' : 'males';
+        const imgL = new Image();
+        const imgR = new Image();
         imgL.src = `assets/images/characters/${genderFolder}/${this.character}/walk/${this.character}_walk_facing_left${i}.png?v=${Date.now()}`;
         imgR.src = `assets/images/characters/${genderFolder}/${this.character}/walk/${this.character}_walk_facing_right${i}.png?v=${Date.now()}`;
-        console.log(`Loading walk frames for ${this.character}: ${imgL.src}, ${imgR.src}`);
+        imgL.onerror = () => console.error(`Failed to load left walk frame ${i} for ${this.character}`);
+        imgR.onerror = () => console.error(`Failed to load right walk frame ${i} for ${this.character}`);
+        this.frames.walk.left.push(imgL);
+        this.frames.walk.right.push(imgR);
       }
-      
-      imgL.onerror = () => console.error(`Failed to load left walk frame ${i} for ${this.character}`);
-      imgR.onerror = () => console.error(`Failed to load right walk frame ${i} for ${this.character}`);
-      
-      this.frames.walk.left.push(imgL);
-      this.frames.walk.right.push(imgR);
     }
     
     // Slash frames (only for prince)
@@ -236,7 +249,38 @@ const Animation = {
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
     
-    // Ne töröljük a canvas-t, a Map kezeli azt
+    // Ha a játékos ghost módban van, mindig a ghost karaktert rajzoljuk
+    if (window.Player && window.Player.isGhost) {
+      const animType = isMoving ? 'walk' : 'idle';
+      const currentDirection = direction;
+      const currentFrame = animationFrame;
+      if (!this.frames[animType][currentDirection] || this.frames[animType][currentDirection].length === 0 || this.character !== 'ghost') {
+        this.character = 'ghost';
+        this.loadFrames();
+      }
+      const frames = this.frames[animType][currentDirection];
+      if (!frames || frames.length === 0) return;
+      const frame = frames[currentFrame % frames.length];
+      const width = frame.width || 64;
+      const height = frame.height || 96;
+      const usingCameraSystem = window.Map && window.Map.camera;
+      const worldPos = usingCameraSystem ? 
+        { x: window.Player.ghost.x - width/2, y: window.Player.ghost.y - height } :
+        { x: x, y: y };
+      if (usingCameraSystem) {
+        ctx.save();
+        ctx.translate(-window.Map.camera.x, -window.Map.camera.y);
+      }
+      ctx.globalAlpha = 0.7; // Szellem áttetszőség
+      ctx.drawImage(frame, worldPos.x, worldPos.y, width, height);
+      ctx.globalAlpha = 1.0;
+      // Name tag
+      const playerName = (window.Game && window.Game.username) || 'Player';
+      this.drawNameTag(ctx, worldPos.x + width/2, worldPos.y - 10, playerName, 'ghost', null);
+      if (usingCameraSystem) ctx.restore();
+      return;
+    }
+    
     // Karakter kirajzolása
     let char = (window.Player && window.Player.character) ? window.Player.character : (window.selectedCharacter || this.character || 'male1');
     

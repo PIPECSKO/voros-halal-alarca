@@ -409,14 +409,14 @@ const UI = {
         { id: 'dancing', name: 'Táncolás', icon: 'assets/images/task/dancing_icon.png' }
       ];
       allTasks.forEach(task => {
-        const li = document.createElement('li');
+          const li = document.createElement('li');
         const img = document.createElement('img');
         img.src = task.icon;
         img.alt = task.name;
         li.appendChild(img);
         li.appendChild(document.createTextNode(task.name));
-        tasksList.appendChild(li);
-      });
+          tasksList.appendChild(li);
+        });
     } catch (error) {
       console.error("Error updating task list:", error);
     }

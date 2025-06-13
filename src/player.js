@@ -16,6 +16,18 @@ const Player = {
   character: 'male1', // Default character
   isDead: false, // ÚJ: halott állapot
   deathStartTime: null, // ÚJ: halál animáció kezdete
+  isGhost: false, // ÚJ: szellem állapot
+  ghost: {
+    x: null,
+    y: null,
+    isMoving: false,
+    direction: 'right',
+    animationFrame: 0,
+    animationTimer: 0,
+    speed: 5,
+  },
+  // ÚJ: body tárolása halál után
+  body: null, // { x, y, character }
 
   // Segédfüggvény a padló pozíció kiszámításához
   getFloorY() {
@@ -40,6 +52,18 @@ const Player = {
 
   setupControls() {
     window.addEventListener('keydown', (e) => {
+      // Ha ghost, akkor a ghost mozgását kezeljük
+      if (this.isGhost) {
+        if (e.code === 'KeyA' || e.code === 'ArrowLeft') {
+          this.ghost.isMoving = true;
+          this.ghost.direction = 'left';
+        } else if (e.code === 'KeyD' || e.code === 'ArrowRight') {
+          this.ghost.isMoving = true;
+          this.ghost.direction = 'right';
+        }
+        // Ghost nem tud taskolni, semmit nem csinál más gombokra
+        return;
+      }
       // Block movement if tasking vagy halott
       if (this.isTasking || this.isDead) return;
       if (e.code === 'KeyA' || e.code === 'ArrowLeft') {
@@ -50,13 +74,29 @@ const Player = {
         this.direction = 'right';
       }
       // X gomb: halál animáció triggerelése
-      if (e.code === 'KeyX' && !this.isDead) {
+      if (e.code === 'KeyX' && !this.isDead && !this.isGhost) {
         this.isDead = true;
         this.isMoving = false;
         this.deathStartTime = Date.now();
+        // Ghost pozíció a test helyén
+        this.ghost.x = this.x;
+        this.ghost.y = this.y;
+        this.ghost.direction = this.direction;
+        this.ghost.isMoving = false;
+        this.ghost.animationFrame = 0;
+        this.ghost.animationTimer = 0;
+        // Ghost csak a halál animáció után aktiválódik (lásd update)
       }
     });
     window.addEventListener('keyup', (e) => {
+      if (this.isGhost) {
+        if ((e.code === 'KeyA' || e.code === 'ArrowLeft') && this.ghost.direction === 'left') {
+          this.ghost.isMoving = false;
+        } else if ((e.code === 'KeyD' || e.code === 'ArrowRight') && this.ghost.direction === 'right') {
+          this.ghost.isMoving = false;
+        }
+        return;
+      }
       // Block movement if tasking vagy halott
       if (this.isTasking || this.isDead) return;
       if ((e.code === 'KeyA' || e.code === 'ArrowLeft') && this.direction === 'left') {
@@ -68,12 +108,65 @@ const Player = {
   },
 
   update() {
-      // Stop movement if tasking vagy halott
-      if (this.isTasking || this.isDead) {
-        this.isMoving = false;
+    // Ha halott, de még nem ghost: várjuk a halál animáció végét
+    if (this.isDead && !this.isGhost) {
+      // 6 frame * 166ms = kb. 1 másodperc
+      const elapsed = Date.now() - (this.deathStartTime || Date.now());
+      if (elapsed > 6 * 166) {
+        // Body pozíció mentése a Game.bodies-hoz CSAK most!
+        if (window.Game && window.Game.bodies && !window.Game.bodies['self']) {
+          window.Game.bodies['self'] = {
+            x: this.x,
+            y: this.y,
+            character: this.character
+          };
+        }
+        // Ghost csak ezután jelenik meg
+        this.isGhost = true;
+        if (window.Animation) window.Animation.init('ghost');
       }
-      
-      if (this.isMoving) {
+      return;
+    }
+    // Ha ghost, akkor csak a ghostot frissítjük
+    if (this.isGhost) {
+      if (this.ghost.isMoving) {
+        let deltaX = 0;
+        if (this.ghost.direction === 'left') deltaX = -this.ghost.speed;
+        if (this.ghost.direction === 'right') deltaX = this.ghost.speed;
+        // Ghost szabadon mozoghat a pályán, de csak X tengelyen
+        const boundaries = window.Map ? window.Map.getRoomBoundaries() : {
+          left: 0,
+          right: window.innerWidth,
+        };
+        this.ghost.x += deltaX;
+        this.ghost.x = Math.max(50, Math.min(boundaries.right - 50, this.ghost.x));
+        // Y pozíció rögzítése a padló szintjén
+        this.ghost.y = this.getFloorY();
+        // Szobaváltás engedélyezett
+        if (window.Map && window.Map.checkRoomTransition) {
+          window.Map.checkRoomTransition(this.ghost.x, this.ghost.y);
+        }
+      }
+      // Ghost animáció frissítése
+      this.ghost.animationTimer++;
+      if (this.ghost.isMoving) {
+        if (this.ghost.animationTimer > 10) {
+          this.ghost.animationFrame = (this.ghost.animationFrame + 1) % 5; // 5 frame-es walk animáció
+          this.ghost.animationTimer = 0;
+        }
+      } else {
+        if (this.ghost.animationTimer > 60) {
+          this.ghost.animationFrame = (this.ghost.animationFrame + 1) % 2; // 2 frame-es idle animáció
+          this.ghost.animationTimer = 0;
+        }
+      }
+      return;
+    }
+    // Stop movement if tasking vagy halott
+    if (this.isTasking || this.isDead) {
+      this.isMoving = false;
+    }
+    if (this.isMoving) {
       // Get movement input
       const keys = {
         left: window.keys?.KeyA || window.keys?.ArrowLeft,
@@ -141,6 +234,25 @@ const Player = {
   },
 
   draw() {
+    if (this.body) {
+      this.drawBody(this.body);
+    }
+    // Ha ghost, akkor a ghost karaktert rajzoljuk
+    if (this.isGhost) {
+      const screenPos = window.Map && window.Map.worldToScreen ? 
+        window.Map.worldToScreen(this.ghost.x, this.ghost.y) : 
+        { x: this.ghost.x, y: this.ghost.y };
+      // Ghost karakter animáció
+      Animation.character = 'ghost';
+      Animation.drawCharacter({
+        x: screenPos.x,
+        y: screenPos.y,
+        isMoving: this.ghost.isMoving,
+        direction: this.ghost.direction,
+        animationFrame: this.ghost.isMoving ? this.ghost.animationFrame : 0
+      });
+      return;
+    }
     // Convert world position to screen position for drawing
     const screenPos = window.Map && window.Map.worldToScreen ? 
       window.Map.worldToScreen(this.x, this.y) : 
@@ -186,35 +298,44 @@ const Player = {
   drawBody(body) {
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
-    
     // Convert world position to screen position for drawing
     const screenPos = window.Map && window.Map.worldToScreen ? 
-      window.Map.worldToScreen(body.position.x, body.position.y) : 
-      { x: body.position.x, y: body.position.y };
-    
+      window.Map.worldToScreen(body.x, body.y) : 
+      { x: body.x, y: body.y };
     // Apply camera transform if using camera system
     const usingCameraSystem = window.Map && window.Map.camera;
     if (usingCameraSystem) {
       ctx.save();
       ctx.translate(-window.Map.camera.x, -window.Map.camera.y);
     }
-    
-    // Draw a simple body representation (red circle)
-    ctx.fillStyle = '#8b0000';
-    ctx.beginPath();
-    ctx.arc(screenPos.x, screenPos.y, 20, 0, 2 * Math.PI);
-    ctx.fill();
-    
-    // Draw timer indicator
-    const timeRemaining = Math.max(0, body.timeToCleanup - (Date.now() - body.timeOfDeath));
-    const progress = timeRemaining / body.timeToCleanup;
-    
-    ctx.strokeStyle = progress > 0.3 ? '#ffff00' : '#ff0000';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(screenPos.x, screenPos.y, 25, 0, 2 * Math.PI * progress);
-    ctx.stroke();
-    
+    // Karakter death sprite kirajzolása (halott test)
+    if (body.character && body.character.startsWith('female')) {
+      // Female karakterekhez 6 death frame van
+      const img = new Image();
+      img.src = `assets/images/characters/females/${body.character}/death/${body.character}_death6.png`;
+      // Y offset: (6-1)*4 = 20 pixel lejjebb
+      const yOffset = 20;
+      img.onload = () => {
+        ctx.drawImage(img, screenPos.x - (img.width || 64)/2, screenPos.y - (img.height || 96) + yOffset, img.width || 64, img.height || 96);
+      };
+      img.onerror = () => {
+        // Ha nincs sprite, piros kör
+        ctx.fillStyle = '#8b0000';
+        ctx.beginPath();
+        ctx.arc(screenPos.x, screenPos.y, 20, 0, 2 * Math.PI);
+        ctx.fill();
+      };
+      // Ha már betöltött, azonnal rajzoljuk
+      if (img.complete) {
+        ctx.drawImage(img, screenPos.x - (img.width || 64)/2, screenPos.y - (img.height || 96) + yOffset, img.width || 64, img.height || 96);
+      }
+    } else {
+      // Ha nincs karakter vagy nem female, piros kör
+      ctx.fillStyle = '#8b0000';
+      ctx.beginPath();
+      ctx.arc(screenPos.x, screenPos.y, 20, 0, 2 * Math.PI);
+      ctx.fill();
+    }
     if (usingCameraSystem) {
       ctx.restore();
     }
