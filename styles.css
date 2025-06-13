@@ -1082,3 +1082,40 @@ body.only-lobby #lobby-screen {
   margin-bottom: 20px !important;
   padding-bottom: 10px;
 } 
+
+/* Task List Styles */
+.task-list-container {
+  position: relative;
+  margin-top: 10px;
+  background: rgba(26, 0, 0, 0.85);
+  border: 2px solid #8b0000;
+  border-radius: 8px;
+  padding: 8px 12px;
+  min-width: 160px;
+  max-width: 220px;
+  color: #fff;
+  font-family: 'MedievalSharp', serif;
+  font-size: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+#task-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+#task-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  font-size: 15px;
+}
+#task-list img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  border-radius: 4px;
+  background: #fff2;
+  border: 1px solid #8b0000;
+  margin-right: 4px;
+} 
