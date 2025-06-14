@@ -21,6 +21,14 @@ const NPC = {
       character: 'musician',
       frameCount: 7, // musician1.png through musician7.png
       animationSpeed: 200 // 200ms per frame (fast lute playing)
+    },
+    musician2: {
+      name: 'Musician 2',
+      room: 'blue',
+      position: { x: 6 * 1920 + 1200, y: 850 }, // musician mellé, jobbra
+      character: 'musician2',
+      frameCount: 6, // musician2_playing1.png through musician2_playing6.png
+      animationSpeed: 200 // 200ms per frame (fast lute playing)
     }
   },
   
@@ -60,6 +68,21 @@ const NPC = {
     console.log(`Loading ${npcType.frameCount} frames for ${npcId}`);
     
     this.frames[npcId] = [];
+    
+    if (npcId === 'musician2') {
+      for (let i = 1; i <= npcType.frameCount; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/musician2/musician2_playing${i}.png`;
+        img.onload = () => {
+          console.log(`✓ ${npcId} frame ${i} loaded`);
+        };
+        img.onerror = () => {
+          console.error(`✗ Failed to load ${npcId} frame ${i}`);
+        };
+        this.frames[npcId].push(img);
+      }
+      return;
+    }
     
     for (let i = 1; i <= npcType.frameCount; i++) {
       const img = new Image();

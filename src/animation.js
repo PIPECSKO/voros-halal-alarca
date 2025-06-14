@@ -141,104 +141,26 @@ const Animation = {
       }
     }
     
-    // Task animáció female1 és female2-hez
+    // Task animáció minden female és male karakterhez
     this.frames.task = [];
-    if (this.character === 'female1') {
+    if (this.character.startsWith('female') || this.character.startsWith('male')) {
+      const folder = this.character.startsWith('female') ? 'females' : 'males';
       for (let i = 1; i <= 5; i++) {
         const img = new Image();
-        img.src = `assets/images/characters/females/female1/animation/female1_animation${i}.png`;
-        img.onerror = () => console.error(`Failed to load female1 task animation frame ${i}`);
-        this.frames.task.push(img);
-      }
-    }
-    if (this.character === 'female2') {
-      for (let i = 1; i <= 5; i++) {
-        const img = new Image();
-        img.src = `assets/images/characters/females/female2/animation/female2_animation${i}.png`;
-        img.onerror = () => console.error(`Failed to load female2 task animation frame ${i}`);
-        this.frames.task.push(img);
-      }
-    }
-    if (this.character === 'female3') {
-      for (let i = 1; i <= 5; i++) {
-        const img = new Image();
-        img.src = `assets/images/characters/females/female3/animation/female3_animation${i}.png`;
-        img.onerror = () => console.error(`Failed to load female3 task animation frame ${i}`);
-        this.frames.task.push(img);
-      }
-    }
-    if (this.character === 'female4') {
-      for (let i = 1; i <= 5; i++) {
-        const img = new Image();
-        img.src = `assets/images/characters/females/female4/animation/female4_animation${i}.png`;
-        img.onerror = () => console.error(`Failed to load female4 task animation frame ${i}`);
-        this.frames.task.push(img);
-      }
-    }
-    if (this.character === 'female5') {
-      for (let i = 1; i <= 5; i++) {
-        const img = new Image();
-        img.src = `assets/images/characters/females/female5/animation/female5_animation${i}.png`;
-        img.onerror = () => console.error(`Failed to load female5 task animation frame ${i}`);
-        this.frames.task.push(img);
-      }
-    }
-    if (this.character === 'female6') {
-      for (let i = 1; i <= 5; i++) {
-        const img = new Image();
-        img.src = `assets/images/characters/females/female6/animation/female6_animation${i}.png`;
-        img.onerror = () => console.error(`Failed to load female6 task animation frame ${i}`);
+        img.src = `assets/images/characters/${folder}/${this.character}/animation/${this.character}_animation${i}.png`;
+        img.onerror = () => console.error(`Failed to load ${this.character} task animation frame ${i}`);
         this.frames.task.push(img);
       }
     }
     
-    // Death animáció female1-6-hoz
+    // Death animáció minden female és male karakterhez
     this.frames.death = [];
-    if (this.character === 'female1') {
+    if (this.character.startsWith('female') || this.character.startsWith('male')) {
+      const folder = this.character.startsWith('female') ? 'females' : 'males';
       for (let i = 1; i <= 6; i++) {
         const img = new Image();
-        img.src = `assets/images/characters/females/female1/death/female1_death${i}.png`;
-        img.onerror = () => console.error(`Failed to load female1 death animation frame ${i}`);
-        this.frames.death.push(img);
-      }
-    }
-    if (this.character === 'female2') {
-      for (let i = 1; i <= 6; i++) {
-        const img = new Image();
-        img.src = `assets/images/characters/females/female2/death/female2_death${i}.png`;
-        img.onerror = () => console.error(`Failed to load female2 death animation frame ${i}`);
-        this.frames.death.push(img);
-      }
-    }
-    if (this.character === 'female3') {
-      for (let i = 1; i <= 6; i++) {
-        const img = new Image();
-        img.src = `assets/images/characters/females/female3/death/female3_death${i}.png`;
-        img.onerror = () => console.error(`Failed to load female3 death animation frame ${i}`);
-        this.frames.death.push(img);
-      }
-    }
-    if (this.character === 'female4') {
-      for (let i = 1; i <= 6; i++) {
-        const img = new Image();
-        img.src = `assets/images/characters/females/female4/death/female4_death${i}.png`;
-        img.onerror = () => console.error(`Failed to load female4 death animation frame ${i}`);
-        this.frames.death.push(img);
-      }
-    }
-    if (this.character === 'female5') {
-      for (let i = 1; i <= 6; i++) {
-        const img = new Image();
-        img.src = `assets/images/characters/females/female5/death/female5_death${i}.png`;
-        img.onerror = () => console.error(`Failed to load female5 death animation frame ${i}`);
-        this.frames.death.push(img);
-      }
-    }
-    if (this.character === 'female6') {
-      for (let i = 1; i <= 6; i++) {
-        const img = new Image();
-        img.src = `assets/images/characters/females/female6/death/female6_death${i}.png`;
-        img.onerror = () => console.error(`Failed to load female6 death animation frame ${i}`);
+        img.src = `assets/images/characters/${folder}/${this.character}/death/${this.character}_death${i}.png`;
+        img.onerror = () => console.error(`Failed to load ${this.character} death animation frame ${i}`);
         this.frames.death.push(img);
       }
     }
@@ -261,12 +183,16 @@ const Animation = {
       const frames = this.frames[animType][currentDirection];
       if (!frames || frames.length === 0) return;
       const frame = frames[currentFrame % frames.length];
-      const width = frame.width || 64;
-      const height = frame.height || 96;
+      // Kisebb ghost: 0.7x méret
+      const scale = 0.7;
+      const width = (frame.width || 64) * scale;
+      const height = (frame.height || 96) * scale;
       const usingCameraSystem = window.Map && window.Map.camera;
+      // Magasabban az Y tengelyen: -300 pixel
+      const yOffset = -300;
       const worldPos = usingCameraSystem ? 
-        { x: window.Player.ghost.x - width/2, y: window.Player.ghost.y - height } :
-        { x: x, y: y };
+        { x: window.Player.ghost.x - width/2, y: window.Player.ghost.y - height + yOffset } :
+        { x: x, y: y + yOffset };
       if (usingCameraSystem) {
         ctx.save();
         ctx.translate(-window.Map.camera.x, -window.Map.camera.y);
@@ -315,8 +241,8 @@ const Animation = {
     if (!frames || frames.length === 0) return;
     const frame = frames[currentFrame % frames.length];
     
-    // ÚJ: female1 és female2 task animáció
-    if ((char === 'female1' || char === 'female2' || char === 'female3' || char === 'female4' || char === 'female5' || char === 'female6') && window.Player && window.Player.isTasking && this.frames.task && this.frames.task.length > 0) {
+    // Általános task animáció minden female és male karakterhez
+    if ((char.startsWith('female') || char.startsWith('male')) && window.Player && window.Player.isTasking && this.frames.task && this.frames.task.length > 0) {
       // Task animáció frame index számítása (idő alapján, 8 fps)
       const now = Date.now();
       const frameIdx = Math.floor((now / 125) % this.frames.task.length);
@@ -340,9 +266,8 @@ const Animation = {
       if (usingCameraSystem) ctx.restore();
       return;
     }
-    
-    // DEATH ANIMÁCIÓ: female1-6
-    if ((char === 'female1' || char === 'female2' || char === 'female3' || char === 'female4' || char === 'female5' || char === 'female6') && window.Player && window.Player.isDead && this.frames.death && this.frames.death.length > 0) {
+    // Általános death animáció minden female és male karakterhez
+    if ((char.startsWith('female') || char.startsWith('male')) && window.Player && window.Player.isDead && this.frames.death && this.frames.death.length > 0) {
       // Death animáció frame index számítása (idő alapján, 6 fps)
       const now = Date.now();
       let frameIdx = Math.floor((now - (window.Player.deathStartTime || now)) / 166);

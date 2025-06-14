@@ -1443,6 +1443,8 @@ const Game = {
                     window.NPC.draw();
                   }
                   
+                  // Draw bodies minden frame-ben, a Player.draw() előtt
+                  if (window.Game && window.Game.drawBodies) window.Game.drawBodies();
                   if (window.Player && window.Player.draw) window.Player.draw();
                   
                   // Draw TaskBar (after everything else, on top)
@@ -2780,7 +2782,7 @@ const Game = {
     for (let bodyId in this.bodies) {
       const body = this.bodies[bodyId];
       if (body) {
-        Player.drawBody(body);
+      Player.drawBody(body);
       }
     }
   },
