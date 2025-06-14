@@ -1083,6 +1083,33 @@ body.only-lobby #lobby-screen {
   padding-bottom: 10px;
 } 
 
+/* P2P-specific additions to your existing CSS */
+.role-display {
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.role-prince { background-color: gold; color: black; }
+.role-noble { background-color: silver; color: black; }
+.role-plague { background-color: #8b0000; color: white; }
+.role-commoner { background-color: #4CAF50; color: white; }
+
+.player.dead {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.you-badge {
+  background: #2c7be5;
+  color: white;
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-size: 0.8em;
+  margin-left: 5px;
+}
+
 /* Task List Styles */
 .task-list-container {
   position: relative;

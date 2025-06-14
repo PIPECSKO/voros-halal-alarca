@@ -8,6 +8,21 @@ import Audio from './audio.js';
 import NPC from './npc.js';
 import Game from './game.js';
 import UIController from './ui-controller.js';
+import Game from './game.js';
+import UIAdapter from './ui-adapter.js';
+import { connectExistingUI } from './ui-connector.js';
+
+document.addEventListener('DOMContentLoaded', () => {
+  const game = new Game();
+  const ui = new UIAdapter(game);
+  
+  // Connect any additional UI elements
+  connectExistingUI(game);
+  
+  // Expose for debugging
+  window.game = game;
+  window.ui = ui;
+});
 
 // Initialize game
 const game = new Game();

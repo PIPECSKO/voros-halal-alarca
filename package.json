@@ -21,7 +21,9 @@
   "author": "Vörös Halál Álarca Team",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
-    "socket.io": "^4.8.1"
+    "express": "^4.21.2",
+    "simple-peer": "^9.11.1",
+    "socket.io": "^4.8.1",
+    "ws": "^8.18.2"
   }
 }

@@ -255,5 +255,21 @@
   </script>
   
   <script type="module" src="src/main.js?v=20251610220000"></script>
+  <script src="/js/ui-adapter.js" type="module"></script>
+<script src="/js/ui-connector.js" type="module"></script>
+<script src="/js/main.js" type="module"></script>
+  <script type="module" src="js/main.js"></script>
+  <script type="module">
+  import Game from '/js/game.js';
+  import UIAdapter from '/js/ui-adapter.js';
+
+  // Initialize game and UI
+  const game = new Game();
+  const ui = new UIAdapter(game);
+
+  // For debugging
+  window.game = game;
+  window.ui = ui;
+</script>
 </body>
 </html> 
