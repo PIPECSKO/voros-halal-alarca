@@ -164,9 +164,9 @@ const Player = {
     }
     // Stop movement if tasking vagy halott
     if (this.isTasking || this.isDead) {
-      this.isMoving = false;
-    }
-    if (this.isMoving) {
+        this.isMoving = false;
+      }
+      if (this.isMoving) {
       // Get movement input
       const keys = {
         left: window.keys?.KeyA || window.keys?.ArrowLeft,
@@ -296,48 +296,40 @@ const Player = {
   
   // Draw dead body
   drawBody(body) {
+    // Mindig a fő canvas contextjét használd!
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
     // Convert world position to screen position for drawing
     const screenPos = window.Map && window.Map.worldToScreen ? 
       window.Map.worldToScreen(body.x, body.y) : 
       { x: body.x, y: body.y };
-    // Apply camera transform if using camera system
-    const usingCameraSystem = window.Map && window.Map.camera;
-    if (usingCameraSystem) {
-      ctx.save();
-      ctx.translate(-window.Map.camera.x, -window.Map.camera.y);
-    }
     // Karakter death sprite kirajzolása (halott test)
-    if (body.character && body.character.startsWith('female')) {
-      // Female karakterekhez 6 death frame van
-      const img = new Image();
-      img.src = `assets/images/characters/females/${body.character}/death/${body.character}_death6.png`;
-      // Y offset: (6-1)*4 = 20 pixel lejjebb
-      const yOffset = 20;
+    let img = null;
+    let yOffset = 20;
+    if (body.character && (body.character.startsWith('female') || body.character.startsWith('male'))) {
+      const folder = body.character.startsWith('female') ? 'females' : 'males';
+      img = new Image();
+      img.src = `assets/images/characters/${folder}/${body.character}/death/${body.character}_death6.png`;
+    }
+    if (img) {
       img.onload = () => {
         ctx.drawImage(img, screenPos.x - (img.width || 64)/2, screenPos.y - (img.height || 96) + yOffset, img.width || 64, img.height || 96);
       };
       img.onerror = () => {
-        // Ha nincs sprite, piros kör
         ctx.fillStyle = '#8b0000';
         ctx.beginPath();
         ctx.arc(screenPos.x, screenPos.y, 20, 0, 2 * Math.PI);
         ctx.fill();
       };
-      // Ha már betöltött, azonnal rajzoljuk
       if (img.complete) {
         ctx.drawImage(img, screenPos.x - (img.width || 64)/2, screenPos.y - (img.height || 96) + yOffset, img.width || 64, img.height || 96);
       }
     } else {
-      // Ha nincs karakter vagy nem female, piros kör
+      // Ha nincs karakter vagy nem female/male, piros kör
       ctx.fillStyle = '#8b0000';
       ctx.beginPath();
       ctx.arc(screenPos.x, screenPos.y, 20, 0, 2 * Math.PI);
       ctx.fill();
-    }
-    if (usingCameraSystem) {
-      ctx.restore();
     }
   }
 }; 
