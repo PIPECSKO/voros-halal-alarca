@@ -7,10 +7,23 @@ export default class UIAdapter {
     this.setupGameEventListeners();
   }
 
+  showError(message) {
+  // Simple version: show an alert
+  alert(message);
+  }
+
+  updateGameCodeDisplay(code) {
+  // Show the game code in the UI
+  const codeEl = document.querySelector('#game-code');
+  if (codeEl) codeEl.textContent = code;
+  // Optionally, show the container if it's hidden
+  const container = document.querySelector('.game-code-container');
+  if (container) container.style.display = 'block';
+  }
   setupEventHandlers() {
     // Main Menu
     this.bind('#host-button', 'click', () => {
-      const username = this.getValue('#player-name');
+      const username = this.getValue('#username-input');
       if (!username) return this.showError('Please enter a name');
       this.game.hostGame(username)
         .then(code => {
@@ -20,7 +33,7 @@ export default class UIAdapter {
     });
 
     this.bind('#join-button', 'click', () => {
-      const username = this.getValue('#player-name');
+      const username = this.getValue('#username-input');
       const code = this.getValue('#room-code');
       if (!username || !code) return this.showError('Please enter name and code');
       this.game.joinGame(code, username)

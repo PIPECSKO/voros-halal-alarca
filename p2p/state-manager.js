@@ -2,6 +2,27 @@ class StateManager {
   constructor(network) {
     this.network = network;
     this.gameState = null;
+    this.listeners = {};
+  }
+
+  on(event, handler) {
+    if (!this.listeners[event]) this.listeners[event] = [];
+    this.listeners[event].push(handler);
+  }
+
+  emit(event, data) {
+    if (this.listeners[event]) {
+      this.listeners[event].forEach(handler => handler(data));
+    }
+  }
+
+  handleStateUpdate(newState) {
+    if (this.network.isHost) return;
+    this.gameState = { ...this.gameState, ...newState };
+    this.emit('state-update', this.gameState); // <--- emit event
+    if (window.game) {
+      window.game.onStateUpdate(this.gameState);
+    }
   }
 
   async initializeHostState(username) {

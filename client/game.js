@@ -1,61 +1,107 @@
-// public/js/game.js
-import P2PNetwork from '../p2p/network.js';
+
+import P2PNetwork from '/p2p/network.js';
+
+const ws = new WebSocket('ws://localhost:3001');
+
+ws.onopen = () => {
+  document.getElementById('connection-status').textContent = 'Connected!';
+  document.getElementById('connection-status').className = 'status-connected';
+  // Now enable your buttons or start your game logic
+};
+
+ws.onclose = () => {
+  document.getElementById('connection-status').textContent = 'Disconnected!';
+  document.getElementById('connection-status').className = 'status-disconnected';
+};
+
+ws.onerror = (err) => {
+  document.getElementById('connection-status').textContent = 'Error!';
+  document.getElementById('connection-status').className = 'status-error';
+};
+
+ws.onmessage = async (event) => {
+  let data;
+  if (typeof event.data === 'string') {
+    data = JSON.parse(event.data);
+  } else if (event.data instanceof Blob) {
+    const text = await event.data.text();
+    data = JSON.parse(text);
+  } else {
+    console.error('Unknown WebSocket message type:', event.data);
+    return;
+  }
+  // ...handle your game messages here...
+};
 
 export default class Game {
   constructor() {
-    this.p2p = new P2PNetwork();
-    this.players = {};
-    this.localPlayerId = null;
-    this.gameState = {
-      players: [],
-      roles: {},
-      nobleGroups: {},
-      tasks: {},
-      deaths: [],
-      started: false,
-      round: 0,
-      gameState: 'lobby'
-    };
+      this.p2p = new P2PNetwork();
+      this.players = {};
+      this.localPlayerId = null;
+      this.gameState = {
+        players: [],
+        roles: {},
+        nobleGroups: {},
+       tasks: {},
+       deaths: [],
+       started: false,
+       round: 0,
+       gameState: 'lobby'
+     };
+     this.listeners = {};
 
-    // Constants
-    this.MAX_PLAYERS = 30;
-    this.MIN_PLAYERS = 1;
-    this.ROUND_TIME = 90;
-    this.DISCUSSION_TIME_BASE = 4;
-    this.GAME_HOURS = [18, 19, 20, 21, 22, 23, 24];
+     // Constants
+     this.MAX_PLAYERS = 30;
+     this.MIN_PLAYERS = 1;
+     this.ROUND_TIME = 90;
+     this.DISCUSSION_TIME_BASE = 4;
+     this.GAME_HOURS = [18, 19, 20, 21, 22, 23, 24];
 
-    this.setupNetworkListeners();
-    this.setupEventHandlers();
-  }
+     this.setupNetworkListeners();
+      this.setupEventHandlers();
+   }    
+
+   on(event, handler) {
+     if (!this.listeners[event]) this.listeners[event] = [];
+      this.listeners[event].push(handler);
+   }
+
+   emit(event, data) {
+     if (this.listeners[event]) {
+        this.listeners[event].forEach(handler => handler(data));
+      }
+    }
 
   setupNetworkListeners() {
+    console.log('stateManager:', this.p2p.stateManager);
+    console.log('typeof stateManager:', typeof this.p2p.stateManager);
     this.p2p.stateManager.on('state-update', (state) => {
       this.updateGameState(state);
     });
 
-    this.p2p.on('player-joined', (player) => {
+    this.p2p.stateManager.on('player-joined', (player) => {
       this.addPlayer(player);
       this.updatePlayerList();
     });
 
-    this.p2p.on('player-left', (playerId) => {
+    this.p2p.stateManager.on('player-left', (playerId) => {
       this.removePlayer(playerId);
       this.updatePlayerList();
     });
 
-    this.p2p.on('game-started', () => {
+    this.p2p.stateManager.on('game-started', () => {
       this.handleGameStart();
     });
 
-    this.p2p.on('round-started', (data) => {
+    this.p2p.stateManager.on('round-started', (data) => {
       this.handleRoundStart(data);
     });
 
-    this.p2p.on('discussion-started', (data) => {
+    this.p2p.stateManager.on('discussion-started', (data) => {
       this.handleDiscussionStart(data);
     });
 
-    this.p2p.on('game-ended', (data) => {
+    this.p2p.stateManager.on('game-ended', (data) => {
       this.handleGameEnd(data);
     });
   }
@@ -666,4 +712,4 @@ export default class Game {
   handleGameEnd(data) {
     // Implement game end UI
   }
-}
+} 

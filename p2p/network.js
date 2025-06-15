@@ -1,4 +1,4 @@
-import PeerConnection from './peer-connection.js';
+const pc = new window.PeerConnection(/* ... */);
 import Signaling from './signaling.js';
 import StateManager from './state-manager.js';
 

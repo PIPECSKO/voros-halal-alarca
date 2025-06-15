@@ -5,7 +5,7 @@ class Signaling {
   }
 
   startHost(gameCode) {
-    this.socket = new WebSocket(`wss://${window.location.host}/signal`);
+    this.socket = new WebSocket(`ws://${window.location.host}`);
     
     this.socket.onopen = () => {
       this.socket.send(JSON.stringify({
@@ -19,7 +19,7 @@ class Signaling {
   }
 
   async connectToHost(gameCode, username) {
-    this.socket = new WebSocket(`wss://${window.location.host}/signal`);
+    this.socket = new WebSocket(`ws://${window.location.host}`);
     
     await new Promise((resolve) => {
       this.socket.onopen = () => {

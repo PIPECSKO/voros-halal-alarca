@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "name": "voros-halal-alarca",
   "version": "1.0.0",
   "description": "Hungarian multiplayer social deduction game - The Red Death's Mask",

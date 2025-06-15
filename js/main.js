@@ -1,5 +1,4 @@
 // Main entry point for game
-import Game from './game.js';
 import UI from './ui.js';
 import Map from './map.js';
 import Player from './player.js';
@@ -8,7 +7,6 @@ import Audio from './audio.js';
 import NPC from './npc.js';
 import Game from './game.js';
 import UIController from './ui-controller.js';
-import Game from './game.js';
 import UIAdapter from './ui-adapter.js';
 import { connectExistingUI } from './ui-connector.js';
 

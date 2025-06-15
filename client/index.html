@@ -169,8 +169,8 @@
     <span id="connection-text">Kapcsolódás...</span>
   </div>
 
-  <!-- Socket.IO Client -->
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
+<script src="/p2p/peer-connection.js"></script>
   
   <!-- Game Scripts -->
   <script type="module">
@@ -196,9 +196,9 @@
     window.debugMode = true;
   </script>
   
-  <script type="module" src="js/main.js"></script>
+  <script type="module" src="./game.js"></script>
   <script type="module">
-  import Game from '/js/game.js';
+  import Game from './game.js';
   import UIAdapter from '/js/ui-adapter.js';
 
   // Initialize game and UI
