@@ -58,18 +58,24 @@ const PeerConnector = {
       // Initialize peer with configuration
       this.peer = new Peer(peerId, {
         host: 'localhost',
-        port: 3001,
+        port: 3002,
         path: '/peerjs',
-        secure: false,
-        config: {
-          'iceServers': [
-            { urls: 'stun:stun.l.google.com:19302' }
-          ]
-        }
+        secure: false
       });
       
       // Setup listeners
       this.setupEventListeners();
+      
+      // Make PeerConnector globally accessible
+      window.PeerConnector = this;
+      
+      // Add timeout to automatically switch to offline mode if connection takes too long
+      setTimeout(() => {
+        if (!this.isConnected && !this.isOfflineMode) {
+          console.log("Connection timeout, switching to offline mode");
+          this.createOfflineFallback();
+        }
+      }, 5000); // 5 second timeout
       
     } catch (error) {
       console.error("Error initializing peer:", error);
@@ -89,6 +95,7 @@ const PeerConnector = {
       this.isConnected = true;
       this.connectionAttempts = 0;
       this.updateConnectionStatusUI('connected', 'Kapcsolódva');
+      
       this.onConnect(this.peer);
       
       // Notify the game that we're connected
@@ -101,6 +108,13 @@ const PeerConnector = {
       console.log("Peer disconnected");
       this.isConnected = false;
       this.updateConnectionStatusUI('disconnected', 'Kapcsolat megszakítva');
+      
+      // Immediately switch to offline mode if not already offline
+      if (!this.isOfflineMode) {
+        console.log("Connection lost, switching to offline mode");
+        this.createOfflineFallback();
+      }
+      
       this.onDisconnect();
       
       // Notify the game that we're disconnected
@@ -113,12 +127,9 @@ const PeerConnector = {
       console.error("Connection error:", error);
       this.onError(error);
       
-      this.connectionAttempts++;
-      if (this.connectionAttempts >= this.maxReconnectAttempts) {
-        this.onReconnectFailed();
-      } else {
-        this.onReconnecting(this.connectionAttempts);
-      }
+      // Immediately switch to offline mode on first connection failure
+      console.log("Connection failed, switching to offline mode");
+      this.createOfflineFallback();
       
       // Notify the game of the error
       if (window.Game) {
@@ -273,6 +284,9 @@ const PeerConnector = {
   createOfflineFallback() {
     console.log("Creating offline fallback peer");
     
+    // Set flag to prevent error messages during transition
+    this.creatingOfflineFallback = true;
+    
     // Create mock peer object with no-op methods
     this.peer = {
       id: `offline-${Date.now()}`,
@@ -287,7 +301,21 @@ const PeerConnector = {
     };
     
     this.isOfflineMode = true;
+    this.creatingOfflineFallback = false; // Clear flag after creation
     this.updateConnectionStatusUI('offline', 'Offline mód');
+    
+    // Make PeerConnector globally accessible
+    window.PeerConnector = this;
+    
+    // Show menu screen for offline mode
+    if (window.UI) {
+      window.UI.showScreen('menu-screen');
+    }
+    
+    // Notify the game that we're in offline mode
+    if (window.Game) {
+      window.Game.handlePeerConnection();
+    }
   },
   
   /**

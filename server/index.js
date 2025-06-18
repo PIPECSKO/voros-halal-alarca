@@ -1,7 +1,6 @@
 const express = require('express');
 const http = require('http');
 const path = require('path');
-const { ExpressPeerServer } = require('peer');
 
 // Game constants
 const MAX_PLAYERS = 30;
@@ -16,18 +15,8 @@ const server = http.createServer(app);
 // Get port from environment variable or default to 3001
 const PORT = process.env.PORT || 3001;
 
-// Create PeerJS server
-const peerServer = ExpressPeerServer(server, {
-  debug: true,
-  path: '/peerjs',
-  proxied: true
-});
-
 // Serve static files from the root directory
 app.use(express.static(path.join(__dirname, '../')));
-
-// Use PeerJS server
-app.use('/peerjs', peerServer);
 
 // Root route serves the index.html
 app.get('/', (req, res) => {
@@ -49,17 +38,7 @@ app.get('/test_connection_speed.html', (req, res) => {
   res.sendFile(path.join(__dirname, '../test_connection_speed.html'));
 });
 
-// Handle PeerJS server events
-peerServer.on('connection', (client) => {
-  console.log(`New peer connected: ${client.id} at ${new Date().toISOString()}`);
-});
-
-peerServer.on('disconnect', (client) => {
-  console.log(`Peer disconnected: ${client.id}`);
-});
-
 // Start the server
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
-  console.log(`PeerJS server is running at /peerjs`);
 }); 

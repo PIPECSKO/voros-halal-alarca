@@ -22,6 +22,17 @@
       </div>
     </div>
     
+    <!-- Connecting Screen -->
+    <div id="connecting-screen" class="screen" style="display: none;">
+      <div class="loading-content">
+        <h1 class="loading-title animated-title">Kapcsolódás...</h1>
+        <div class="loading-bar">
+          <div class="loading-progress"></div>
+        </div>
+        <div class="loading-tip">Kapcsolódás a szerverhez...</div>
+      </div>
+    </div>
+    
     <!-- Menu Screen -->
     <div id="menu-screen" class="screen" style="display: flex;">
       <div class="menu-container modern-menu">
@@ -86,7 +97,7 @@
         <div class="mini-map"></div>
         
         <!-- Fullscreen Indicator -->
-        <div id="fullscreen-indicator" style="position: absolute; top: 10px; right: 10px; background: rgba(26, 0, 0, 0.8); color: #8b0000; padding: 5px 10px; border: 1px solid #8b0000; font-size: 12px; display: none;">
+        <div id="fullscreen-indicator" style="position: absolute; top: 10px; right: 10px; background: rgba(26, 0, 0, 0.8); color: #8b0000; padding: 5px 10px; border: 1px solid #8b0000; font-size: 12px; display: none; cursor: pointer;" onclick="this.style.display='none';">
           📺 Teljes képernyő - ESC a kilépéshez
         </div>
         
@@ -165,6 +176,9 @@
       <div>
         <input type="checkbox" id="debug-show-shapes">
         <label for="debug-show-shapes">Show shapes</label>
+      </div>
+      <div style="margin-top: 10px;">
+        <button id="debug-character-setup" style="background: #8b0000; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Setup Character</button>
       </div>
       <div style="margin-top: 10px;">
         <a href="/connection-test" target="_blank" style="color: #00ff00; text-decoration: underline;">Open Connection Test</a>

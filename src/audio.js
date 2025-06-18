@@ -125,11 +125,29 @@ const Audio = {
   loadMusic() {
     console.log("Loading music tracks...");
     
-    // Load lobby music
-    this.music.lobby = new window.Audio('assets/sounds/lobby/lobby1.mp3');
-    this.music.lobby.volume = this.musicVolume;
-    this.music.lobby.loop = true;
-    this.music.lobby.preload = 'auto';
+    // Load lobby music with error handling
+    try {
+      this.music.lobby = new window.Audio('assets/sounds/lobby/lobby1.mp3');
+      this.music.lobby.volume = this.musicVolume;
+      this.music.lobby.loop = true;
+      this.music.lobby.preload = 'auto';
+      
+      // Add error handling for the audio element
+      this.music.lobby.addEventListener('error', (e) => {
+        console.warn("Lobby music loading error:", e);
+      });
+      
+      this.music.lobby.addEventListener('loadstart', () => {
+        console.log("Lobby music loading started");
+      });
+      
+      this.music.lobby.addEventListener('canplaythrough', () => {
+        console.log("Lobby music loaded successfully");
+      });
+      
+    } catch (error) {
+      console.warn("Error loading lobby music:", error);
+    }
     
     console.log("Music tracks loaded");
   },

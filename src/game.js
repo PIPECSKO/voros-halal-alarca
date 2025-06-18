@@ -95,12 +95,18 @@ const Game = {
     // Initialize UI
     this.initUIHandlers();
     
-    // Show connecting screen
-    UI.showScreen('connecting-screen');
-    
     // Initialize peer connection
     console.log('Connecting to peers...');
     this.peer = PeerConnector.init();
+    
+    // Check if we're already in offline mode after initialization
+    if (window.PeerConnector && window.PeerConnector.isOfflineMode) {
+      console.log('Already in offline mode, showing menu screen');
+      UI.showScreen('menu-screen');
+    } else {
+      // Show connecting screen only if not in offline mode
+      UI.showScreen('connecting-screen');
+    }
     
     // Initialize peer event listeners
     this.setupPeerListeners();
@@ -1312,7 +1318,13 @@ const Game = {
     console.log('Peer disconnected');
     this.state.isConnected = false;
     
-    // Show error message
+    // Don't show error message if we're switching to offline mode
+    if (window.PeerConnector && (window.PeerConnector.isOfflineMode || window.PeerConnector.creatingOfflineFallback)) {
+      console.log('Switching to offline mode - not showing connection error');
+      return;
+    }
+    
+    // Show error message only for actual connection failures
     UI.showError('Kapcsolat megszakadt. Kérlek, frissítsd az oldalt.');
   }
 }; 

@@ -68,11 +68,24 @@ window.addEventListener('DOMContentLoaded', () => {
     if (indicator) {
       if (isFullscreen) {
         indicator.style.display = 'block';
-        setTimeout(() => {
-          indicator.style.display = 'none';
+        // Clear any existing timeout
+        if (window.fullscreenIndicatorTimeout) {
+          clearTimeout(window.fullscreenIndicatorTimeout);
+        }
+        // Set new timeout to hide after 2 seconds
+        window.fullscreenIndicatorTimeout = setTimeout(() => {
+          if (indicator) {
+            indicator.style.display = 'none';
+            console.log('Fullscreen indicator auto-hidden');
+          }
         }, 2000);
       } else {
         indicator.style.display = 'none';
+        // Clear timeout when exiting fullscreen
+        if (window.fullscreenIndicatorTimeout) {
+          clearTimeout(window.fullscreenIndicatorTimeout);
+          window.fullscreenIndicatorTimeout = null;
+        }
       }
     }
     
@@ -145,6 +158,7 @@ window.addEventListener('DOMContentLoaded', () => {
     window.GameMap = GameMap;
     window.Game = Game;
     window.PeerConnector = PeerConnector;
+    window.UI = UI;
     
     // Setup main menu volume controls
     setupMainMenuVolumeControls();

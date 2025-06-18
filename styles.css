@@ -426,6 +426,7 @@ button:hover {
   width: 100vw;
   height: 100vh;
   pointer-events: none;
+  z-index: 10;
 }
 
 .role-display {
@@ -436,6 +437,9 @@ button:hover {
   background-color: rgba(0, 0, 0, 0.8);
   border-radius: 0.5rem;
   font-size: 1.2rem;
+  color: #ffffff;
+  z-index: 11;
+  pointer-events: auto;
 }
 
 .timer-display {
@@ -447,6 +451,9 @@ button:hover {
   background-color: rgba(0, 0, 0, 0.8);
   border-radius: 0.5rem;
   font-size: 1.2rem;
+  color: #ffffff;
+  z-index: 11;
+  pointer-events: auto;
 }
 
 .mini-map {
@@ -458,6 +465,8 @@ button:hover {
   background-color: rgba(0, 0, 0, 0.8);
   border-radius: 0.5rem;
   padding: 0.5rem;
+  z-index: 11;
+  pointer-events: auto;
 }
 
 /* Game Code Display */
@@ -1050,4 +1059,54 @@ body.only-lobby #lobby-screen {
   font-size: 12px;
   text-align: center;
   white-space: nowrap;
+}
+
+.game-ui {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.role-display {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 0.5rem;
+  font-size: 1.2rem;
+  color: #ffffff;
+  z-index: 11;
+  pointer-events: auto;
+}
+
+.timer-display {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem 1rem;
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 0.5rem;
+  font-size: 1.2rem;
+  color: #ffffff;
+  z-index: 11;
+  pointer-events: auto;
+}
+
+.mini-map {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 200px;
+  height: 100px;
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  z-index: 11;
+  pointer-events: auto;
 } 
