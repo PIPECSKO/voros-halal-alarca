@@ -217,9 +217,8 @@ const UI = {
             this.setupLobbyCharacterSelection();
             // --- Ensure game code is set after render ---
             if (window.Game && window.Game.gameCode) {
-              const parts = window.Game.gameCode.split('_');
-              const peerId = parts.length > 2 ? parts.slice(0, -1).join('_') : window.Game.gameCode;
-              UI.updateGameCode(peerId);
+              // Display the full game code (including timestamp) for joining
+              UI.updateGameCode(window.Game.gameCode);
             }
           }, 100);
         }
