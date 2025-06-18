@@ -195,9 +195,11 @@ const Game = {
       });
     }
     
-    // Pause menu
+    // Pause menu - only active on game screen
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'p' || e.key === 'P') {
+      // Only trigger pause if the game screen is visible
+      const gameScreen = document.getElementById('game-screen');
+      if ((e.key === 'p' || e.key === 'P') && gameScreen && gameScreen.style.display === 'flex') {
         this.togglePause();
       }
     });
@@ -205,6 +207,10 @@ const Game = {
   
   // Toggle pause menu
   togglePause() {
+    if (typeof window.showPauseMenu !== 'function' || typeof window.hidePauseMenu !== 'function') {
+      // Not in game context, ignore
+      return;
+    }
     if (window.isPaused) {
       window.hidePauseMenu();
     } else {
