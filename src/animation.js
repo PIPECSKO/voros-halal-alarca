@@ -187,7 +187,7 @@ const Animation = {
       const scale = 0.7;
       const width = (frame.width || 64) * scale;
       const height = (frame.height || 96) * scale;
-      const usingCameraSystem = window.Map && window.Map.camera;
+      const usingCameraSystem = window.GameMap && window.GameMap.camera;
       // Magasabban az Y tengelyen: -300 pixel
       const yOffset = -300;
       const worldPos = usingCameraSystem ? 
@@ -195,7 +195,7 @@ const Animation = {
         { x: x, y: y + yOffset };
       if (usingCameraSystem) {
         ctx.save();
-        ctx.translate(-window.Map.camera.x, -window.Map.camera.y);
+        ctx.translate(-window.GameMap.camera.x, -window.GameMap.camera.y);
       }
       ctx.globalAlpha = 0.7; // Szellem áttetszőség
       ctx.drawImage(frame, worldPos.x, worldPos.y, width, height);
@@ -224,7 +224,6 @@ const Animation = {
       animType = 'slash';
       currentDirection = this.slashDirection;
       currentFrame = this.slashFrame;
-      console.log('Drawing slash frame:', currentFrame, 'direction:', currentDirection);
     } else {
       // Use normal idle/walk animation
       animType = isMoving ? 'walk' : 'idle';
@@ -241,81 +240,22 @@ const Animation = {
     if (!frames || frames.length === 0) return;
     const frame = frames[currentFrame % frames.length];
     
-    // Általános task animáció minden female és male karakterhez
-    if ((char.startsWith('female') || char.startsWith('male')) && window.Player && window.Player.isTasking && this.frames.task && this.frames.task.length > 0) {
-      // Task animáció frame index számítása (idő alapján, 8 fps)
-      const now = Date.now();
-      const frameIdx = Math.floor((now / 125) % this.frames.task.length);
-      const frame = this.frames.task[frameIdx];
-      const width = frame.width || 64;
-      const height = frame.height || 96;
-      const usingCameraSystem = window.Map && window.Map.camera;
-      const worldPos = usingCameraSystem ? 
-        { x: window.Player.x - width/2, y: window.Player.y - height } :
-        { x: x, y: y };
-      if (usingCameraSystem) {
-        ctx.save();
-        ctx.translate(-window.Map.camera.x, -window.Map.camera.y);
-      }
-      ctx.drawImage(frame, worldPos.x, worldPos.y, width, height);
-      // Name tag
-      const playerName = (window.Game && window.Game.username) || 'Player';
-      const playerRole = (window.Game && window.Game.playerRole) || 'commoner';
-      const groupColor = (window.Game && window.Game.groupColor) || null;
-      this.drawNameTag(ctx, worldPos.x + width/2, worldPos.y - 10, playerName, playerRole, groupColor);
-      if (usingCameraSystem) ctx.restore();
-      return;
-    }
-    // Általános death animáció minden female és male karakterhez
-    if ((char.startsWith('female') || char.startsWith('male')) && window.Player && window.Player.isDead && this.frames.death && this.frames.death.length > 0) {
-      // Death animáció frame index számítása (idő alapján, 6 fps)
-      const now = Date.now();
-      let frameIdx = Math.floor((now - (window.Player.deathStartTime || now)) / 166);
-      if (frameIdx >= this.frames.death.length) frameIdx = this.frames.death.length - 1;
-      const frame = this.frames.death[frameIdx];
-      const width = frame.width || 64;
-      const height = frame.height || 96;
-      const usingCameraSystem = window.Map && window.Map.camera;
-      // Y eltolás: minden frame-mel 4 pixellel lejjebb
-      let yOffset = 0;
-      if (frameIdx < this.frames.death.length - 1) {
-        yOffset = frameIdx * 4;
-      } else {
-        yOffset = (this.frames.death.length - 1) * 4;
-      }
-      const worldPos = usingCameraSystem ? 
-        { x: window.Player.x - width/2, y: window.Player.y - height + yOffset } :
-        { x: x, y: y + yOffset };
-      if (usingCameraSystem) {
-        ctx.save();
-        ctx.translate(-window.Map.camera.x, -window.Map.camera.y);
-      }
-      ctx.drawImage(frame, worldPos.x, worldPos.y, width, height);
-      // Name tag
-      const playerName = (window.Game && window.Game.username) || 'Player';
-      const playerRole = (window.Game && window.Game.playerRole) || 'commoner';
-      const groupColor = (window.Game && window.Game.groupColor) || null;
-      this.drawNameTag(ctx, worldPos.x + width/2, worldPos.y - 10, playerName, playerRole, groupColor);
-      if (usingCameraSystem) ctx.restore();
-      return;
-    }
-    
     // Ha a Map kamera rendszert használ, alkalmazni kell a transform-ot
-    const usingCameraSystem = window.Map && window.Map.camera;
+    const usingCameraSystem = window.GameMap && window.GameMap.camera;
     
     if (usingCameraSystem) {
       ctx.save();
-      ctx.translate(-window.Map.camera.x, -window.Map.camera.y);
+      ctx.translate(-window.GameMap.camera.x, -window.GameMap.camera.y);
     }
     
     // Karakter rajzolása
-    const width = frame.width || 64;
-    const height = frame.height || 96;
+    const width = 256;
+    const height = 256;
     
     // Világkoordinátákban rajzoljuk ha kamera rendszer van
     const worldPos = usingCameraSystem ? 
-      { x: window.Player.x - width/2, y: window.Player.y - height } :
-      { x: x, y: y };
+      { x: x - width/2, y: y - height } :
+      { x: x - width/2, y: y - height };
     
     ctx.drawImage(frame, worldPos.x, worldPos.y, width, height);
       
@@ -323,7 +263,7 @@ const Animation = {
     const playerName = (window.Game && window.Game.username) || 'Player';
     const playerRole = (window.Game && window.Game.playerRole) || 'commoner';
     const groupColor = (window.Game && window.Game.groupColor) || null;
-    this.drawNameTag(ctx, worldPos.x + width/2, worldPos.y - 10, playerName, playerRole, groupColor);
+    this.drawNameTag(ctx, worldPos.x + width/2, worldPos.y - 20, playerName, playerRole, groupColor);
     
     if (usingCameraSystem) {
       ctx.restore();

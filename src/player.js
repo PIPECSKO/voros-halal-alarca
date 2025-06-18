@@ -31,181 +31,104 @@ const Player = {
 
   // Segédfüggvény a padló pozíció kiszámításához
   getFloorY() {
-    const scaleY = window.Map ? window.Map.scaleY : 1;
-    return 898 * scaleY; // Karakter pozíció 12 pixellel feljebb
+    // Get the floor level based on room height
+    const roomHeight = window.GameMap ? window.GameMap.roomHeight : 1080;
+    // Floor is at 85% from the top of the room (15% from bottom)
+    return roomHeight * 0.85;
   },
 
   init() {
-    const scaleX = window.Map ? window.Map.scaleX : 1;
-    const scaleY = window.Map ? window.Map.scaleY : 1;
-    this.x = 960 * scaleX; // Középen kezdés, skálázva
-    this.y = this.getFloorY();
-    this.speed = 5 * Math.min(scaleX, scaleY); // Sebesség skálázása
+    // Initialize player properties
+    this.x = 960;
+    this.y = 540;
+    this.speed = 5;
     this.isMoving = false;
     this.direction = 'right';
     this.animationFrame = 0;
-    this.animationTimer = 0;
-    // Set character from selected character or default
+    this.lastUpdate = Date.now();
+    this.isTasking = false;
+    this.isDead = false;
     this.character = window.selectedCharacter || 'male1';
-    this.setupControls();
-  },
-
-  setupControls() {
-    window.addEventListener('keydown', (e) => {
-      // Ha ghost, akkor a ghost mozgását kezeljük
-      if (this.isGhost) {
-        if (e.code === 'KeyA' || e.code === 'ArrowLeft') {
-          this.ghost.isMoving = true;
-          this.ghost.direction = 'left';
-        } else if (e.code === 'KeyD' || e.code === 'ArrowRight') {
-          this.ghost.isMoving = true;
-          this.ghost.direction = 'right';
-        }
-        // Ghost nem tud taskolni, semmit nem csinál más gombokra
-        return;
-      }
-      // Block movement if tasking vagy halott
-      if (this.isTasking || this.isDead) return;
-      if (e.code === 'KeyA' || e.code === 'ArrowLeft') {
-        this.isMoving = true;
-        this.direction = 'left';
-      } else if (e.code === 'KeyD' || e.code === 'ArrowRight') {
-        this.isMoving = true;
-        this.direction = 'right';
-      }
-      // X gomb: halál animáció triggerelése
-      if (e.code === 'KeyX' && !this.isDead && !this.isGhost) {
-        this.isDead = true;
-        this.isMoving = false;
-        this.deathStartTime = Date.now();
-        // Ghost pozíció a test helyén
-        this.ghost.x = this.x;
-        this.ghost.y = this.y;
-        this.ghost.direction = this.direction;
-        this.ghost.isMoving = false;
-        this.ghost.animationFrame = 0;
-        this.ghost.animationTimer = 0;
-        // Ghost csak a halál animáció után aktiválódik (lásd update)
-      }
+    
+    // Initialize key states
+    window.keys = window.keys || {};
+    
+    // Setup key event listeners
+    document.addEventListener('keydown', (e) => {
+      window.keys[e.code] = true;
     });
-    window.addEventListener('keyup', (e) => {
-      if (this.isGhost) {
-        if ((e.code === 'KeyA' || e.code === 'ArrowLeft') && this.ghost.direction === 'left') {
-          this.ghost.isMoving = false;
-        } else if ((e.code === 'KeyD' || e.code === 'ArrowRight') && this.ghost.direction === 'right') {
-          this.ghost.isMoving = false;
-        }
-        return;
-      }
-      // Block movement if tasking vagy halott
-      if (this.isTasking || this.isDead) return;
-      if ((e.code === 'KeyA' || e.code === 'ArrowLeft') && this.direction === 'left') {
-        this.isMoving = false;
-      } else if ((e.code === 'KeyD' || e.code === 'ArrowRight') && this.direction === 'right') {
-        this.isMoving = false;
-      }
+    
+    document.addEventListener('keyup', (e) => {
+      window.keys[e.code] = false;
     });
+    
+    console.log('Player initialized with character:', this.character);
   },
 
   update() {
-    // Ha halott, de még nem ghost: várjuk a halál animáció végét
-    if (this.isDead && !this.isGhost) {
-      // 6 frame * 166ms = kb. 1 másodperc
-      const elapsed = Date.now() - (this.deathStartTime || Date.now());
-      if (elapsed > 6 * 166) {
-        // Body pozíció mentése a Game.bodies-hoz CSAK most!
-        if (window.Game && window.Game.bodies && !window.Game.bodies['self']) {
-          window.Game.bodies['self'] = {
-            x: this.x,
-            y: this.y,
-            character: this.character
-          };
-        }
-        // Ghost csak ezután jelenik meg
-        this.isGhost = true;
-        if (window.Animation) window.Animation.init('ghost');
-      }
-      return;
+    // Stop if player is tasking or dead
+    if (this.isTasking || this.isDead) return;
+    
+    // Get movement input
+    const moveLeft = window.keys['ArrowLeft'] || window.keys['KeyA'];
+    const moveRight = window.keys['ArrowRight'] || window.keys['KeyD'];
+    
+    // Calculate new position
+    let newX = this.x;
+    if (moveLeft) {
+      newX -= this.speed;
+      this.direction = 'left';
+      this.isMoving = true;
+    } else if (moveRight) {
+      newX += this.speed;
+      this.direction = 'right';
+      this.isMoving = true;
+    } else {
+      this.isMoving = false;
     }
-    // Ha ghost, akkor csak a ghostot frissítjük
-    if (this.isGhost) {
-      if (this.ghost.isMoving) {
-        let deltaX = 0;
-        if (this.ghost.direction === 'left') deltaX = -this.ghost.speed;
-        if (this.ghost.direction === 'right') deltaX = this.ghost.speed;
-        // Ghost szabadon mozoghat a pályán, de csak X tengelyen
-        const boundaries = window.Map ? window.Map.getRoomBoundaries() : {
-          left: 0,
-          right: window.innerWidth,
-        };
-        this.ghost.x += deltaX;
-        this.ghost.x = Math.max(50, Math.min(boundaries.right - 50, this.ghost.x));
-        // Y pozíció rögzítése a padló szintjén
-        this.ghost.y = this.getFloorY();
-        // Szobaváltás engedélyezett
-        if (window.Map && window.Map.checkRoomTransition) {
-          window.Map.checkRoomTransition(this.ghost.x, this.ghost.y);
+    
+    // Update Y position to floor level
+    this.y = this.getFloorY();
+    
+    // Check for room transitions before updating position
+    if (window.GameMap) {
+      const currentRoom = Math.floor(this.x / window.GameMap.roomWidth);
+      const newRoom = Math.floor(newX / window.GameMap.roomWidth);
+      
+      // Clamp position to map boundaries
+      const totalMapWidth = window.GameMap.roomWidth * window.GameMap.rooms.length;
+      newX = Math.max(0, Math.min(totalMapWidth - 1, newX));
+      
+      const clampedRoom = Math.max(0, Math.min(window.GameMap.rooms.length - 1, newRoom));
+      if (clampedRoom !== currentRoom) {
+        // We're transitioning to a new room
+        window.GameMap.currentRoom = clampedRoom;
+        window.GameMap.setCameraTarget(clampedRoom * window.GameMap.roomWidth, 0);
+        
+        // Position player in the new room
+        if (clampedRoom > currentRoom) {
+          // Moving right - place on left side of new room
+          newX = (clampedRoom * window.GameMap.roomWidth) + 50;
+        } else {
+          // Moving left - place on right side of new room
+          newX = ((clampedRoom + 1) * window.GameMap.roomWidth) - 50;
         }
-      }
-      // Ghost animáció frissítése
-      this.ghost.animationTimer++;
-      if (this.ghost.isMoving) {
-        if (this.ghost.animationTimer > 10) {
-          this.ghost.animationFrame = (this.ghost.animationFrame + 1) % 5; // 5 frame-es walk animáció
-          this.ghost.animationTimer = 0;
-        }
-      } else {
-        if (this.ghost.animationTimer > 60) {
-          this.ghost.animationFrame = (this.ghost.animationFrame + 1) % 2; // 2 frame-es idle animáció
-          this.ghost.animationTimer = 0;
-        }
-      }
-      return;
-    }
-    // Stop movement if tasking vagy halott
-    if (this.isTasking || this.isDead) {
-        this.isMoving = false;
-      }
-      if (this.isMoving) {
-      // Get movement input
-      const keys = {
-        left: window.keys?.KeyA || window.keys?.ArrowLeft,
-        right: window.keys?.KeyD || window.keys?.ArrowRight,
-        up: window.keys?.KeyW || window.keys?.ArrowUp,
-        down: window.keys?.KeyS || window.keys?.ArrowDown
-      };
-      
-      // Calculate movement
-      let deltaX = 0;
-      let deltaY = 0;
-      
-      if (this.direction === 'left') deltaX = -this.speed;
-      if (this.direction === 'right') deltaX = this.speed;
-      
-      // Apply movement with boundaries
-      const boundaries = window.Map ? window.Map.getRoomBoundaries() : {
-        left: 0,
-        right: window.innerWidth,
-        top: 0,
-        bottom: window.innerHeight
-      };
-      
-      // Update position
-      this.x += deltaX;
-      this.y += deltaY;
-      
-      // Clamp to world boundaries
-      this.x = Math.max(50, Math.min(boundaries.right - 50, this.x));
-      // Y pozíció rögzítése a padló szintjén
-      this.y = this.getFloorY();
-      
-      // Check for room transitions
-      if (window.Map && window.Map.checkRoomTransition) {
-        window.Map.checkRoomTransition(this.x, this.y);
       }
     }
     
-    this.updateAnimation();
+    // Update position
+    this.x = newX;
+    
+    // Update animation frame
+    if (this.isMoving) {
+      const now = Date.now();
+      if (now - this.lastUpdate > 100) { // Update animation every 100ms
+        this.animationFrame = (this.animationFrame + 1) % 4;
+        this.lastUpdate = now;
+      }
+    } else {
+      this.animationFrame = 0;
+    }
   },
 
   updateAnimation() {
@@ -234,34 +157,12 @@ const Player = {
   },
 
   draw() {
-    if (this.body) {
-      this.drawBody(this.body);
-    }
-    // Ha ghost, akkor a ghost karaktert rajzoljuk
-    if (this.isGhost) {
-      const screenPos = window.Map && window.Map.worldToScreen ? 
-        window.Map.worldToScreen(this.ghost.x, this.ghost.y) : 
-        { x: this.ghost.x, y: this.ghost.y };
-      // Ghost karakter animáció
-      Animation.character = 'ghost';
-      Animation.drawCharacter({
-        x: screenPos.x,
-        y: screenPos.y,
-        isMoving: this.ghost.isMoving,
-        direction: this.ghost.direction,
-        animationFrame: this.ghost.isMoving ? this.ghost.animationFrame : 0
-      });
-      return;
-    }
-    // Convert world position to screen position for drawing
-    const screenPos = window.Map && window.Map.worldToScreen ? 
-      window.Map.worldToScreen(this.x, this.y) : 
-      { x: this.x, y: this.y };
+    if (!window.Animation) return;
     
-    // Az Animation modul drawCharacter metódusát hívjuk
-    Animation.drawCharacter({
-      x: screenPos.x,
-      y: screenPos.y,
+    // Draw the player character
+    window.Animation.drawCharacter({
+      x: this.x,
+      y: this.y,
       isMoving: this.isMoving,
       direction: this.direction,
       animationFrame: this.animationFrame
@@ -270,27 +171,16 @@ const Player = {
   
   // Draw other player (for multiplayer mode)
   drawOtherPlayer(player) {
-    // Convert world position to screen position for drawing
-    const screenPos = window.Map && window.Map.worldToScreen ? 
-      window.Map.worldToScreen(player.x, player.y) : 
-      { x: player.x, y: player.y };
-    
-    // Store current character to restore later
+    // Draw other player at logical coordinates
     const originalCharacter = Animation.character;
-    
-    // Set character for this player
     Animation.character = player.character || 'male1';
-    
-    // Draw the other player using Animation module
     Animation.drawCharacter({
-      x: screenPos.x,
-      y: screenPos.y,
+      x: player.x,
+      y: player.y,
       isMoving: player.isMoving || false,
       direction: player.direction || 'right',
       animationFrame: player.animationFrame || 0
     });
-    
-    // Restore original character
     Animation.character = originalCharacter;
   },
   
@@ -300,8 +190,8 @@ const Player = {
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
     // Convert world position to screen position for drawing
-    const screenPos = window.Map && window.Map.worldToScreen ? 
-      window.Map.worldToScreen(body.x, body.y) : 
+    const screenPos = window.GameMap && window.GameMap.worldToScreen ? 
+      window.GameMap.worldToScreen(body.x, body.y) : 
       { x: body.x, y: body.y };
     // Karakter death sprite kirajzolása (halott test)
     let img = null;
