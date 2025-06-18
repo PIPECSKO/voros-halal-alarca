@@ -5,11 +5,6 @@
   box-sizing: border-box;
 }
 
-@font-face {
-  font-family: 'MedievalSharp';
-  src: url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
-}
-
 body, html {
   height: 100%;
   width: 100%;

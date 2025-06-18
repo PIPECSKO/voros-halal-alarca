@@ -57,9 +57,9 @@ const PeerConnector = {
       
       // Initialize peer with configuration
       this.peer = new Peer(peerId, {
-        host: '192.168.0.170', // <-- SZERVER IP. ÁT KELL ÍRNI!
-        port: 9000,
-        path: '/myapp',
+        host: 'localhost',
+        port: 3001,
+        path: '/peerjs',
         secure: false,
         config: {
           'iceServers': [
