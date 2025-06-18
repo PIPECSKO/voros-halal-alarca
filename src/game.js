@@ -203,6 +203,15 @@ const Game = {
     });
   },
   
+  // Toggle pause menu
+  togglePause() {
+    if (window.isPaused) {
+      window.hidePauseMenu();
+    } else {
+      window.showPauseMenu();
+    }
+  },
+  
   // Setup peer event listeners
   setupPeerListeners() {
     if (!this.peer) return;
