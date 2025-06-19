@@ -69,14 +69,6 @@ const PeerConnector = {
       // Make PeerConnector globally accessible
       window.PeerConnector = this;
       
-      // Add timeout to automatically switch to offline mode if connection takes too long
-      setTimeout(() => {
-        if (!this.isConnected && !this.isOfflineMode) {
-          console.log("Connection timeout, switching to offline mode");
-          this.createOfflineFallback();
-        }
-      }, 5000); // 5 second timeout
-      
     } catch (error) {
       console.error("Error initializing peer:", error);
       this.createOfflineFallback();
@@ -109,9 +101,20 @@ const PeerConnector = {
       this.isConnected = false;
       this.updateConnectionStatusUI('disconnected', 'Kapcsolat megszakítva');
       
-      // Immediately switch to offline mode if not already offline
-      if (!this.isOfflineMode) {
-        console.log("Connection lost, switching to offline mode");
+      // Try to reconnect a few times before switching to offline mode
+      if (!this.isOfflineMode && this.connectionAttempts < this.maxReconnectAttempts) {
+        this.connectionAttempts++;
+        console.log(`Connection lost, attempting to reconnect (${this.connectionAttempts}/${this.maxReconnectAttempts})`);
+        this.onReconnecting(this.connectionAttempts);
+        
+        // Wait a bit before trying to reconnect
+        setTimeout(() => {
+          if (!this.isConnected && !this.isOfflineMode) {
+            this.init();
+          }
+        }, 2000);
+      } else if (!this.isOfflineMode) {
+        console.log("Max reconnection attempts reached, switching to offline mode");
         this.createOfflineFallback();
       }
       
@@ -127,13 +130,15 @@ const PeerConnector = {
       console.error("Connection error:", error);
       this.onError(error);
       
-      // Immediately switch to offline mode on first connection failure
-      console.log("Connection failed, switching to offline mode");
-      this.createOfflineFallback();
-      
-      // Notify the game of the error
-      if (window.Game) {
-        window.Game.handlePeerDisconnection();
+      // Only switch to offline mode if it's a critical error or we've tried too many times
+      if (this.connectionAttempts >= this.maxReconnectAttempts) {
+        console.log("Max reconnection attempts reached, switching to offline mode");
+        this.createOfflineFallback();
+        
+        // Notify the game of the error
+        if (window.Game) {
+          window.Game.handlePeerDisconnection();
+        }
       }
     });
     
