@@ -7,8 +7,7 @@
     "start": "node server/index.js",
     "dev": "node server/index.js",
     "build": "echo 'No build step needed'",
-    "test": "echo 'No tests specified'",
-    "start:all": "node server/start-all.js"
+    "test": "echo 'No tests specified'"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -23,7 +22,6 @@
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
-    "peerjs": "^1.5.5",
-    "peerjs-server": "^0.2.9"
+    "socket.io": "^4.8.1"
   }
 }

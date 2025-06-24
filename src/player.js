@@ -16,119 +16,103 @@ const Player = {
   character: 'male1', // Default character
   isDead: false, // ÚJ: halott állapot
   deathStartTime: null, // ÚJ: halál animáció kezdete
-  isGhost: false, // ÚJ: szellem állapot
-  ghost: {
-    x: null,
-    y: null,
-    isMoving: false,
-    direction: 'right',
-    animationFrame: 0,
-    animationTimer: 0,
-    speed: 5,
-  },
-  // ÚJ: body tárolása halál után
-  body: null, // { x, y, character }
 
   // Segédfüggvény a padló pozíció kiszámításához
   getFloorY() {
-    // Get the floor level based on room height
-    const roomHeight = window.GameMap ? window.GameMap.roomHeight : 1080;
-    // Floor is at 85% from the top of the room (15% from bottom)
-    return roomHeight * 0.85;
+    const scaleY = window.Map ? window.Map.scaleY : 1;
+    return 898 * scaleY; // Karakter pozíció 12 pixellel feljebb
   },
 
   init() {
-    // Initialize player properties
-    this.x = 960;
-    this.y = 540;
-    this.speed = 5;
+    const scaleX = window.Map ? window.Map.scaleX : 1;
+    const scaleY = window.Map ? window.Map.scaleY : 1;
+    this.x = 960 * scaleX; // Középen kezdés, skálázva
+    this.y = this.getFloorY();
+    this.speed = 5 * Math.min(scaleX, scaleY); // Sebesség skálázása
     this.isMoving = false;
     this.direction = 'right';
     this.animationFrame = 0;
-    this.lastUpdate = Date.now();
-    this.isTasking = false;
-    this.isDead = false;
+    this.animationTimer = 0;
+    // Set character from selected character or default
     this.character = window.selectedCharacter || 'male1';
-    
-    // Initialize key states
-    window.keys = window.keys || {};
-    
-    // Setup key event listeners
-    document.addEventListener('keydown', (e) => {
-      window.keys[e.code] = true;
+    this.setupControls();
+  },
+
+  setupControls() {
+    window.addEventListener('keydown', (e) => {
+      // Block movement if tasking vagy halott
+      if (this.isTasking || this.isDead) return;
+      if (e.code === 'KeyA' || e.code === 'ArrowLeft') {
+        this.isMoving = true;
+        this.direction = 'left';
+      } else if (e.code === 'KeyD' || e.code === 'ArrowRight') {
+        this.isMoving = true;
+        this.direction = 'right';
+      }
+      // X gomb: halál animáció triggerelése
+      if (e.code === 'KeyX' && !this.isDead) {
+        this.isDead = true;
+        this.isMoving = false;
+        this.deathStartTime = Date.now();
+      }
     });
-    
-    document.addEventListener('keyup', (e) => {
-      window.keys[e.code] = false;
+    window.addEventListener('keyup', (e) => {
+      // Block movement if tasking vagy halott
+      if (this.isTasking || this.isDead) return;
+      if ((e.code === 'KeyA' || e.code === 'ArrowLeft') && this.direction === 'left') {
+        this.isMoving = false;
+      } else if ((e.code === 'KeyD' || e.code === 'ArrowRight') && this.direction === 'right') {
+        this.isMoving = false;
+      }
     });
-    
-    console.log('Player initialized with character:', this.character);
   },
 
   update() {
-    // Stop if player is tasking or dead
-    if (this.isTasking || this.isDead) return;
-    
-    // Get movement input
-    const moveLeft = window.keys['ArrowLeft'] || window.keys['KeyA'];
-    const moveRight = window.keys['ArrowRight'] || window.keys['KeyD'];
-    
-    // Calculate new position
-    let newX = this.x;
-    if (moveLeft) {
-      newX -= this.speed;
-      this.direction = 'left';
-      this.isMoving = true;
-    } else if (moveRight) {
-      newX += this.speed;
-      this.direction = 'right';
-      this.isMoving = true;
-    } else {
-      this.isMoving = false;
-    }
-    
-    // Update Y position to floor level
-    this.y = this.getFloorY();
-    
-    // Check for room transitions before updating position
-    if (window.GameMap) {
-      const currentRoom = Math.floor(this.x / window.GameMap.roomWidth);
-      const newRoom = Math.floor(newX / window.GameMap.roomWidth);
+      // Stop movement if tasking vagy halott
+      if (this.isTasking || this.isDead) {
+        this.isMoving = false;
+      }
       
-      // Clamp position to map boundaries
-      const totalMapWidth = window.GameMap.roomWidth * window.GameMap.rooms.length;
-      newX = Math.max(0, Math.min(totalMapWidth - 1, newX));
+      if (this.isMoving) {
+      // Get movement input
+      const keys = {
+        left: window.keys?.KeyA || window.keys?.ArrowLeft,
+        right: window.keys?.KeyD || window.keys?.ArrowRight,
+        up: window.keys?.KeyW || window.keys?.ArrowUp,
+        down: window.keys?.KeyS || window.keys?.ArrowDown
+      };
       
-      const clampedRoom = Math.max(0, Math.min(window.GameMap.rooms.length - 1, newRoom));
-      if (clampedRoom !== currentRoom) {
-        // We're transitioning to a new room
-        window.GameMap.currentRoom = clampedRoom;
-        window.GameMap.setCameraTarget(clampedRoom * window.GameMap.roomWidth, 0);
-        
-        // Position player in the new room
-        if (clampedRoom > currentRoom) {
-          // Moving right - place on left side of new room
-          newX = (clampedRoom * window.GameMap.roomWidth) + 50;
-        } else {
-          // Moving left - place on right side of new room
-          newX = ((clampedRoom + 1) * window.GameMap.roomWidth) - 50;
-        }
+      // Calculate movement
+      let deltaX = 0;
+      let deltaY = 0;
+      
+      if (this.direction === 'left') deltaX = -this.speed;
+      if (this.direction === 'right') deltaX = this.speed;
+      
+      // Apply movement with boundaries
+      const boundaries = window.Map ? window.Map.getRoomBoundaries() : {
+        left: 0,
+        right: window.innerWidth,
+        top: 0,
+        bottom: window.innerHeight
+      };
+      
+      // Update position
+      this.x += deltaX;
+      this.y += deltaY;
+      
+      // Clamp to world boundaries
+      this.x = Math.max(50, Math.min(boundaries.right - 50, this.x));
+      // Y pozíció rögzítése a padló szintjén
+      this.y = this.getFloorY();
+      
+      // Check for room transitions
+      if (window.Map && window.Map.checkRoomTransition) {
+        window.Map.checkRoomTransition(this.x, this.y);
       }
     }
     
-    // Update position
-    this.x = newX;
-    
-    // Update animation frame
-    if (this.isMoving) {
-      const now = Date.now();
-      if (now - this.lastUpdate > 100) { // Update animation every 100ms
-        this.animationFrame = (this.animationFrame + 1) % 4;
-        this.lastUpdate = now;
-      }
-    } else {
-      this.animationFrame = 0;
-    }
+    this.updateAnimation();
   },
 
   updateAnimation() {
@@ -157,12 +141,15 @@ const Player = {
   },
 
   draw() {
-    if (!window.Animation) return;
+    // Convert world position to screen position for drawing
+    const screenPos = window.Map && window.Map.worldToScreen ? 
+      window.Map.worldToScreen(this.x, this.y) : 
+      { x: this.x, y: this.y };
     
-    // Draw the player character
-    window.Animation.drawCharacter({
-      x: this.x,
-      y: this.y,
+    // Az Animation modul drawCharacter metódusát hívjuk
+    Animation.drawCharacter({
+      x: screenPos.x,
+      y: screenPos.y,
       isMoving: this.isMoving,
       direction: this.direction,
       animationFrame: this.animationFrame
@@ -171,55 +158,65 @@ const Player = {
   
   // Draw other player (for multiplayer mode)
   drawOtherPlayer(player) {
-    // Draw other player at logical coordinates
+    // Convert world position to screen position for drawing
+    const screenPos = window.Map && window.Map.worldToScreen ? 
+      window.Map.worldToScreen(player.x, player.y) : 
+      { x: player.x, y: player.y };
+    
+    // Store current character to restore later
     const originalCharacter = Animation.character;
+    
+    // Set character for this player
     Animation.character = player.character || 'male1';
+    
+    // Draw the other player using Animation module
     Animation.drawCharacter({
-      x: player.x,
-      y: player.y,
+      x: screenPos.x,
+      y: screenPos.y,
       isMoving: player.isMoving || false,
       direction: player.direction || 'right',
       animationFrame: player.animationFrame || 0
     });
+    
+    // Restore original character
     Animation.character = originalCharacter;
   },
   
   // Draw dead body
   drawBody(body) {
-    // Mindig a fő canvas contextjét használd!
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
+    
     // Convert world position to screen position for drawing
-    const screenPos = window.GameMap && window.GameMap.worldToScreen ? 
-      window.GameMap.worldToScreen(body.x, body.y) : 
-      { x: body.x, y: body.y };
-    // Karakter death sprite kirajzolása (halott test)
-    let img = null;
-    let yOffset = 20;
-    if (body.character && (body.character.startsWith('female') || body.character.startsWith('male'))) {
-      const folder = body.character.startsWith('female') ? 'females' : 'males';
-      img = new Image();
-      img.src = `assets/images/characters/${folder}/${body.character}/death/${body.character}_death6.png`;
+    const screenPos = window.Map && window.Map.worldToScreen ? 
+      window.Map.worldToScreen(body.position.x, body.position.y) : 
+      { x: body.position.x, y: body.position.y };
+    
+    // Apply camera transform if using camera system
+    const usingCameraSystem = window.Map && window.Map.camera;
+    if (usingCameraSystem) {
+      ctx.save();
+      ctx.translate(-window.Map.camera.x, -window.Map.camera.y);
     }
-    if (img) {
-      img.onload = () => {
-        ctx.drawImage(img, screenPos.x - (img.width || 64)/2, screenPos.y - (img.height || 96) + yOffset, img.width || 64, img.height || 96);
-      };
-      img.onerror = () => {
-        ctx.fillStyle = '#8b0000';
-        ctx.beginPath();
-        ctx.arc(screenPos.x, screenPos.y, 20, 0, 2 * Math.PI);
-        ctx.fill();
-      };
-      if (img.complete) {
-        ctx.drawImage(img, screenPos.x - (img.width || 64)/2, screenPos.y - (img.height || 96) + yOffset, img.width || 64, img.height || 96);
-      }
-    } else {
-      // Ha nincs karakter vagy nem female/male, piros kör
-      ctx.fillStyle = '#8b0000';
-      ctx.beginPath();
-      ctx.arc(screenPos.x, screenPos.y, 20, 0, 2 * Math.PI);
-      ctx.fill();
+    
+    // Draw a simple body representation (red circle)
+    ctx.fillStyle = '#8b0000';
+    ctx.beginPath();
+    ctx.arc(screenPos.x, screenPos.y, 20, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    // Draw timer indicator
+    const timeRemaining = Math.max(0, body.timeToCleanup - (Date.now() - body.timeOfDeath));
+    const progress = timeRemaining / body.timeToCleanup;
+    
+    ctx.strokeStyle = progress > 0.3 ? '#ffff00' : '#ff0000';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(screenPos.x, screenPos.y, 25, 0, 2 * Math.PI * progress);
+    ctx.stroke();
+    
+    if (usingCameraSystem) {
+      ctx.restore();
     }
   }
 }; 

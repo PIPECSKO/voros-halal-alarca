@@ -5,10 +5,15 @@
   box-sizing: border-box;
 }
 
+@font-face {
+  font-family: 'MedievalSharp';
+  src: url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
+}
+
 body, html {
   height: 100%;
   width: 100%;
-  overflow: hidden; /* Desktop esetén marad hidden */
+  overflow: hidden;
   font-family: 'MedievalSharp', serif;
   background-color: #000;
   color: #8b0000;
@@ -258,7 +263,7 @@ button:hover {
 #game-code-input {
   padding: 10px;
   font-size: 24px;
-  width: 300px;
+  width: 200px;
   text-align: center;
   margin: 20px;
   letter-spacing: 5px;
@@ -270,43 +275,31 @@ button:hover {
 
 /* Lobby Screen */
 .lobby-container {
-  width: 98%;
-  max-width: 1600px;
-  padding: 0.5rem;
+  width: 80%;
+  max-width: 800px;
+  padding: 2rem;
   background-color: rgba(0, 0, 0, 0.8);
   border-radius: 1rem;
-  position: relative;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
 }
 
 .lobby-container h2 {
-  font-size: 1.8rem;
-  margin-bottom: 1rem;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
   text-align: center;
 }
 
 .player-list {
-  min-width: 180px;
-  background: #1a0000;
-  border-radius: 0;
-  border: 2px solid #8b0000;
-  padding: 1rem;
-  max-height: 500px;
-  overflow-y: auto;
-  flex: 1;
+  margin-bottom: 2rem;
 }
 
 .player-list h3 {
-  font-size: 1.2rem;
-  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .player-list ul {
   list-style: none;
-  max-height: 150px;
+  max-height: 300px;
   overflow-y: auto;
 }
 
@@ -327,7 +320,7 @@ button:hover {
   /* background-size: cover !important; */
 }
 
-* #game-screen {
+/* #game-screen {
   overflow: hidden;
   position: fixed;
   top: 0;
@@ -354,7 +347,6 @@ button:hover {
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  z-index: 2;
 }
 
 .role-display {
@@ -365,9 +357,6 @@ button:hover {
   background-color: rgba(0, 0, 0, 0.8);
   border-radius: 0.5rem;
   font-size: 1.2rem;
-  z-index: 3;
-  color: #fff;
-  pointer-events: none;
 }
 
 .timer-display {
@@ -445,8 +434,8 @@ button:hover {
 }
 
 .player-character {
-  width: 80px !important;
-  height: 120px !important;
+  width: 50px;
+  height: 70px;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -473,49 +462,8 @@ button:hover {
 
 /* Media Queries for Responsiveness */
 @media (max-width: 768px) {
-  body, html {
-    overflow: auto !important; /* Mobile esetén engedélyezzük a scrollt */
-    height: auto !important;
-    min-height: 100vh;
-  }
-  
-  #menu-screen {
-    overflow-y: auto !important;
-    height: auto !important;
-    min-height: 100vh;
-    padding: 20px 0;
-  }
-  
   .menu-container {
-    min-height: auto !important;
-    height: auto !important;
-    padding: 20px;
-    margin: 10px;
-  }
-  
-  .input-group {
-    margin-bottom: 20px !important;
-  }
-  
-  .button-group {
-    flex-direction: column !important;
-    gap: 15px !important;
-  }
-  
-  #join-code-group {
-    margin-bottom: 20px !important;
-  }
-  
-  #join-code-group div {
-    flex-direction: column !important;
-    gap: 15px !important;
-  }
-  
-  .menu-button {
-    width: 100% !important;
-    margin: 5px 0 !important;
-    padding: 15px !important;
-    font-size: 16px !important;
+    flex-direction: column;
   }
   
   .clock {
@@ -733,18 +681,6 @@ button:hover {
   z-index: 10;
 }
 
-/* Mobile fixes for .screen class */
-@media (max-width: 768px) {
-  .screen {
-    position: relative !important;
-    height: auto !important;
-    min-height: 100vh !important;
-    align-items: flex-start !important;
-    padding: 20px 0 !important;
-    overflow-y: auto !important;
-  }
-}
-
 /* Game Canvas - dinamikus méretezés 16:9 arányban */
 #game-canvas {
   position: fixed !important;
@@ -820,23 +756,10 @@ button:hover {
 /* Lobby Modern */
 .lobby-flex {
   display: flex;
-  gap: 20px;
+  gap: 40px;
   justify-content: space-between;
-  align-items: stretch;
-  margin-bottom: 0.5rem;
-  flex: 1;
-  height: 100%;
-}
-
-.lobby-flex > div {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Middle column - test roles area height increase */
-.lobby-flex > div:nth-child(2) {
-  min-height: 500px;
-  overflow-y: auto;
+  align-items: flex-start;
+  margin-bottom: 2.5rem;
 }
 
 .player-list {
@@ -844,22 +767,16 @@ button:hover {
   background: #1a0000;
   border-radius: 0;
   border: 2px solid #8b0000;
-  padding: 0.8rem;
-  max-height: 300px;
-  overflow-y: auto;
+  padding: 1.2rem;
 }
 
 .character-select-panel {
-  min-width: 450px;
+  min-width: 220px;
   background: #1a0000;
   border-radius: 0;
   border: 2px solid #8b0000;
-  padding: 1rem;
+  padding: 1.2rem;
   text-align: center;
-  flex: 2;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
 }
 
 .character-gender-group {
@@ -870,31 +787,11 @@ button:hover {
 }
 
 .character-gallery {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-bottom: 8px;
-  min-height: 550px;
-  padding: 12px;
-  border: 1px solid #8b0000;
-  background: #0a0000;
-  border-radius: 4px;
-}
-
-.character-gallery img {
-  width: 80px !important;
-  height: 120px !important;
-  object-fit: cover;
-  border-radius: 2px;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: all 0.2s ease;
-}
-
-.character-gallery img:hover {
-  transform: scale(1.05);
-  border-color: #8b0000;
-  box-shadow: 0 0 6px rgba(139, 0, 0, 0.6);
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 10px;
+  min-height: 100px;
 }
 
 .character-preview-label {
@@ -1073,89 +970,4 @@ body.only-lobby #lobby-screen {
   font-size: 12px;
   text-align: center;
   white-space: nowrap;
-}
-
-/* Lobby Button Group Spacing for Volume Controls */
-#lobby-screen .button-group {
-  margin-top: auto;
-  margin-bottom: 20px !important;
-  padding-bottom: 10px;
-} 
-
-/* Task List Styles */
-.task-list-container {
-  position: relative;
-  margin-top: 10px;
-  background: rgba(26, 0, 0, 0.85);
-  border: 2px solid #8b0000;
-  border-radius: 8px;
-  padding: 8px 12px;
-  min-width: 160px;
-  max-width: 220px;
-  color: #fff;
-  font-family: 'MedievalSharp', serif;
-  font-size: 15px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-#task-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-#task-list li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
-  font-size: 15px;
-}
-#task-list img {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-  border-radius: 4px;
-  background: #fff2;
-  border: 1px solid #8b0000;
-  margin-right: 4px;
-}
-
-/* Connecting Screen */
-.connecting-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  background: rgba(26, 0, 0, 0.95);
-  color: #8b0000;
-  text-align: center;
-}
-
-.connecting-title {
-  font-family: 'MedievalSharp', serif;
-  font-size: 2.5em;
-  margin-bottom: 2em;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.connecting-spinner {
-  width: 50px;
-  height: 50px;
-  border: 5px solid #8b0000;
-  border-top: 5px solid transparent;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 2em;
-}
-
-.connecting-tip {
-  font-family: 'MedievalSharp', serif;
-  font-size: 1.2em;
-  color: #8b0000;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 } 

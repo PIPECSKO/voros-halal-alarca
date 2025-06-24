@@ -8,26 +8,18 @@ const NPC = {
   npcTypes: {
     dealer: {
       name: 'Dealer',
-      room: 'green', // Green room (index 4)
-      position: { x: 4 * 1920 + 960, y: 713 }, // Dealer position at floor level
+      room: 'green', // Zöld szoba (index 4)
+      position: { x: 4 * 1920 + 960, y: 713 }, // Dealer pozíció még 4 pixellel feljebb
       character: 'dealer',
       frameCount: 2, // dealer1.png, dealer2.png
       animationSpeed: 800 // 800ms per frame (slow, calm dealing)
     },
     musician: {
       name: 'Musician',
-      room: 'blue', // Blue room (index 6)
-      position: { x: 6 * 1920 + 960, y: 713 }, // Musician position at floor level
+      room: 'blue', // Kék szoba (index 6)
+      position: { x: 6 * 1920 + 960, y: 850 }, // NPC-k lejjebb hozása a padló közelébe
       character: 'musician',
       frameCount: 7, // musician1.png through musician7.png
-      animationSpeed: 200 // 200ms per frame (fast lute playing)
-    },
-    musician2: {
-      name: 'Musician 2',
-      room: 'blue',
-      position: { x: 6 * 1920 + 1200, y: 713 }, // Second musician position at floor level
-      character: 'musician2',
-      frameCount: 6, // musician2_playing1.png through musician2_playing6.png
       animationSpeed: 200 // 200ms per frame (fast lute playing)
     }
   },
@@ -68,21 +60,6 @@ const NPC = {
     console.log(`Loading ${npcType.frameCount} frames for ${npcId}`);
     
     this.frames[npcId] = [];
-    
-    if (npcId === 'musician2') {
-      for (let i = 1; i <= npcType.frameCount; i++) {
-        const img = new Image();
-        img.src = `assets/images/characters/musician2/musician2_playing${i}.png`;
-        img.onload = () => {
-          console.log(`✓ ${npcId} frame ${i} loaded`);
-        };
-        img.onerror = () => {
-          console.error(`✗ Failed to load ${npcId} frame ${i}`);
-        };
-        this.frames[npcId].push(img);
-      }
-      return;
-    }
     
     for (let i = 1; i <= npcType.frameCount; i++) {
       const img = new Image();
@@ -129,16 +106,16 @@ const NPC = {
   
   // Draw all NPCs
   draw() {
-    if (!window.GameMap || !window.GameMap.ctx) {
+    if (!window.Map || !window.Map.ctx) {
       return;
     }
     
-    const ctx = window.GameMap.ctx;
-    const usingCameraSystem = window.GameMap && window.GameMap.camera;
+    const ctx = window.Map.ctx;
+    const usingCameraSystem = window.Map && window.Map.camera;
     
     if (usingCameraSystem) {
       ctx.save();
-      ctx.translate(-window.GameMap.camera.x, -window.GameMap.camera.y);
+      ctx.translate(-window.Map.camera.x, -window.Map.camera.y);
     }
     
     for (const npc of Object.values(this.npcs)) {

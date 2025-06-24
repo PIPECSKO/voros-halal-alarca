@@ -60,69 +60,56 @@ const Animation = {
     this.frames.idle.left = [];
     this.frames.idle.right = [];
     for (let i = 1; i <= idleFrameCount; i++) {
+      const imgL = new Image();
+      const imgR = new Image();
+      
       if (this.character === 'ghost') {
-        // Ghost: fix útvonal, nem genderFolder!
-        const img = new Image();
-        img.src = `assets/images/characters/ghost/idle/ghost_idle${i}.png`;
-        img.onerror = () => console.error(`Failed to load ghost idle frame ${i}`);
-        this.frames.idle.left.push(img);
-        this.frames.idle.right.push(img);
+        // Ghost uses different naming convention
+        imgL.src = `assets/images/characters/${genderFolder}/idle/${this.character}_idle${i}.png`;
+        imgR.src = `assets/images/characters/${genderFolder}/idle/${this.character}_idle${i}.png`; // Same image for both directions
       } else if (this.character === 'prince') {
-        const imgL = new Image();
-        const imgR = new Image();
-        imgL.src = `assets/images/characters/prince/idle/prince_idle_facing_left${i}.png`;
-        imgR.src = `assets/images/characters/prince/idle/prince_idle_facing_right${i}.png`;
-        imgL.onerror = () => console.error(`Failed to load left idle frame ${i} for ${this.character}`);
-        imgR.onerror = () => console.error(`Failed to load right idle frame ${i} for ${this.character}`);
-        this.frames.idle.left.push(imgL);
-        this.frames.idle.right.push(imgR);
+        // Prince uses direct folder structure
+        imgL.src = `assets/images/characters/${genderFolder}/idle/${this.character}_idle_facing_left${i}.png`;
+        imgR.src = `assets/images/characters/${genderFolder}/idle/${this.character}_idle_facing_right${i}.png`;
       } else {
-        const genderFolder = this.character.startsWith('female') ? 'females' : 'males';
-        const imgL = new Image();
-        const imgR = new Image();
         imgL.src = `assets/images/characters/${genderFolder}/${this.character}/idle/${this.character}_idle_facing_left${i}.png?v=${Date.now()}`;
         imgR.src = `assets/images/characters/${genderFolder}/${this.character}/idle/${this.character}_idle_facing_right${i}.png?v=${Date.now()}`;
-        imgL.onerror = () => console.error(`Failed to load left idle frame ${i} for ${this.character}`);
-        imgR.onerror = () => console.error(`Failed to load right idle frame ${i} for ${this.character}`);
-        this.frames.idle.left.push(imgL);
-        this.frames.idle.right.push(imgR);
+        console.log(`Loading idle frames for ${this.character}: ${imgL.src}, ${imgR.src}`);
       }
+      
+      imgL.onerror = () => console.error(`Failed to load left idle frame ${i} for ${this.character}`);
+      imgR.onerror = () => console.error(`Failed to load right idle frame ${i} for ${this.character}`);
+      
+      this.frames.idle.left.push(imgL);
+      this.frames.idle.right.push(imgR);
     }
     
     // Walk frames
     this.frames.walk.left = [];
     this.frames.walk.right = [];
     for (let i = 1; i <= walkFrameCount; i++) {
+      const imgL = new Image();
+      const imgR = new Image();
+      
       if (this.character === 'ghost') {
-        // Ghost: fix útvonal, nem genderFolder!
-        const imgL = new Image();
-        const imgR = new Image();
-        imgL.src = `assets/images/characters/ghost/walk/ghost_walk_facing_left${i}.png`;
-        imgR.src = `assets/images/characters/ghost/walk/ghost_walk_facing_right${i}.png`;
-        imgL.onerror = () => console.error(`Failed to load ghost walk left frame ${i}`);
-        imgR.onerror = () => console.error(`Failed to load ghost walk right frame ${i}`);
-        this.frames.walk.left.push(imgL);
-        this.frames.walk.right.push(imgR);
+        // Ghost uses different naming convention
+        imgL.src = `assets/images/characters/${genderFolder}/walk/${this.character}_walk_facing_left${i}.png`;
+        imgR.src = `assets/images/characters/${genderFolder}/walk/${this.character}_walk_facing_right${i}.png`;
       } else if (this.character === 'prince') {
-        const imgL = new Image();
-        const imgR = new Image();
-        imgL.src = `assets/images/characters/prince/walk/prince_walk_facing_left${i}.png`;
-        imgR.src = `assets/images/characters/prince/walk/prince_walk_facing_right${i}.png`;
-        imgL.onerror = () => console.error(`Failed to load left walk frame ${i} for ${this.character}`);
-        imgR.onerror = () => console.error(`Failed to load right walk frame ${i} for ${this.character}`);
-        this.frames.walk.left.push(imgL);
-        this.frames.walk.right.push(imgR);
+        // Prince uses direct folder structure
+        imgL.src = `assets/images/characters/${genderFolder}/walk/${this.character}_walk_facing_left${i}.png`;
+        imgR.src = `assets/images/characters/${genderFolder}/walk/${this.character}_walk_facing_right${i}.png`;
       } else {
-        const genderFolder = this.character.startsWith('female') ? 'females' : 'males';
-        const imgL = new Image();
-        const imgR = new Image();
         imgL.src = `assets/images/characters/${genderFolder}/${this.character}/walk/${this.character}_walk_facing_left${i}.png?v=${Date.now()}`;
         imgR.src = `assets/images/characters/${genderFolder}/${this.character}/walk/${this.character}_walk_facing_right${i}.png?v=${Date.now()}`;
-        imgL.onerror = () => console.error(`Failed to load left walk frame ${i} for ${this.character}`);
-        imgR.onerror = () => console.error(`Failed to load right walk frame ${i} for ${this.character}`);
-        this.frames.walk.left.push(imgL);
-        this.frames.walk.right.push(imgR);
+        console.log(`Loading walk frames for ${this.character}: ${imgL.src}, ${imgR.src}`);
       }
+      
+      imgL.onerror = () => console.error(`Failed to load left walk frame ${i} for ${this.character}`);
+      imgR.onerror = () => console.error(`Failed to load right walk frame ${i} for ${this.character}`);
+      
+      this.frames.walk.left.push(imgL);
+      this.frames.walk.right.push(imgR);
     }
     
     // Slash frames (only for prince)
@@ -141,26 +128,104 @@ const Animation = {
       }
     }
     
-    // Task animáció minden female és male karakterhez
+    // Task animáció female1 és female2-hez
     this.frames.task = [];
-    if (this.character.startsWith('female') || this.character.startsWith('male')) {
-      const folder = this.character.startsWith('female') ? 'females' : 'males';
+    if (this.character === 'female1') {
       for (let i = 1; i <= 5; i++) {
         const img = new Image();
-        img.src = `assets/images/characters/${folder}/${this.character}/animation/${this.character}_animation${i}.png`;
-        img.onerror = () => console.error(`Failed to load ${this.character} task animation frame ${i}`);
+        img.src = `assets/images/characters/females/female1/animation/female1_animation${i}.png`;
+        img.onerror = () => console.error(`Failed to load female1 task animation frame ${i}`);
+        this.frames.task.push(img);
+      }
+    }
+    if (this.character === 'female2') {
+      for (let i = 1; i <= 5; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/females/female2/animation/female2_animation${i}.png`;
+        img.onerror = () => console.error(`Failed to load female2 task animation frame ${i}`);
+        this.frames.task.push(img);
+      }
+    }
+    if (this.character === 'female3') {
+      for (let i = 1; i <= 5; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/females/female3/animation/female3_animation${i}.png`;
+        img.onerror = () => console.error(`Failed to load female3 task animation frame ${i}`);
+        this.frames.task.push(img);
+      }
+    }
+    if (this.character === 'female4') {
+      for (let i = 1; i <= 5; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/females/female4/animation/female4_animation${i}.png`;
+        img.onerror = () => console.error(`Failed to load female4 task animation frame ${i}`);
+        this.frames.task.push(img);
+      }
+    }
+    if (this.character === 'female5') {
+      for (let i = 1; i <= 5; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/females/female5/animation/female5_animation${i}.png`;
+        img.onerror = () => console.error(`Failed to load female5 task animation frame ${i}`);
+        this.frames.task.push(img);
+      }
+    }
+    if (this.character === 'female6') {
+      for (let i = 1; i <= 5; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/females/female6/animation/female6_animation${i}.png`;
+        img.onerror = () => console.error(`Failed to load female6 task animation frame ${i}`);
         this.frames.task.push(img);
       }
     }
     
-    // Death animáció minden female és male karakterhez
+    // Death animáció female1-6-hoz
     this.frames.death = [];
-    if (this.character.startsWith('female') || this.character.startsWith('male')) {
-      const folder = this.character.startsWith('female') ? 'females' : 'males';
+    if (this.character === 'female1') {
       for (let i = 1; i <= 6; i++) {
         const img = new Image();
-        img.src = `assets/images/characters/${folder}/${this.character}/death/${this.character}_death${i}.png`;
-        img.onerror = () => console.error(`Failed to load ${this.character} death animation frame ${i}`);
+        img.src = `assets/images/characters/females/female1/death/female1_death${i}.png`;
+        img.onerror = () => console.error(`Failed to load female1 death animation frame ${i}`);
+        this.frames.death.push(img);
+      }
+    }
+    if (this.character === 'female2') {
+      for (let i = 1; i <= 6; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/females/female2/death/female2_death${i}.png`;
+        img.onerror = () => console.error(`Failed to load female2 death animation frame ${i}`);
+        this.frames.death.push(img);
+      }
+    }
+    if (this.character === 'female3') {
+      for (let i = 1; i <= 6; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/females/female3/death/female3_death${i}.png`;
+        img.onerror = () => console.error(`Failed to load female3 death animation frame ${i}`);
+        this.frames.death.push(img);
+      }
+    }
+    if (this.character === 'female4') {
+      for (let i = 1; i <= 6; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/females/female4/death/female4_death${i}.png`;
+        img.onerror = () => console.error(`Failed to load female4 death animation frame ${i}`);
+        this.frames.death.push(img);
+      }
+    }
+    if (this.character === 'female5') {
+      for (let i = 1; i <= 6; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/females/female5/death/female5_death${i}.png`;
+        img.onerror = () => console.error(`Failed to load female5 death animation frame ${i}`);
+        this.frames.death.push(img);
+      }
+    }
+    if (this.character === 'female6') {
+      for (let i = 1; i <= 6; i++) {
+        const img = new Image();
+        img.src = `assets/images/characters/females/female6/death/female6_death${i}.png`;
+        img.onerror = () => console.error(`Failed to load female6 death animation frame ${i}`);
         this.frames.death.push(img);
       }
     }
@@ -171,42 +236,7 @@ const Animation = {
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
     
-    // Ha a játékos ghost módban van, mindig a ghost karaktert rajzoljuk
-    if (window.Player && window.Player.isGhost) {
-      const animType = isMoving ? 'walk' : 'idle';
-      const currentDirection = direction;
-      const currentFrame = animationFrame;
-      if (!this.frames[animType][currentDirection] || this.frames[animType][currentDirection].length === 0 || this.character !== 'ghost') {
-        this.character = 'ghost';
-        this.loadFrames();
-      }
-      const frames = this.frames[animType][currentDirection];
-      if (!frames || frames.length === 0) return;
-      const frame = frames[currentFrame % frames.length];
-      // Kisebb ghost: 0.7x méret
-      const scale = 0.7;
-      const width = (frame.width || 64) * scale;
-      const height = (frame.height || 96) * scale;
-      const usingCameraSystem = window.GameMap && window.GameMap.camera;
-      // Magasabban az Y tengelyen: -300 pixel
-      const yOffset = -300;
-      const worldPos = usingCameraSystem ? 
-        { x: window.Player.ghost.x - width/2, y: window.Player.ghost.y - height + yOffset } :
-        { x: x, y: y + yOffset };
-      if (usingCameraSystem) {
-        ctx.save();
-        ctx.translate(-window.GameMap.camera.x, -window.GameMap.camera.y);
-      }
-      ctx.globalAlpha = 0.7; // Szellem áttetszőség
-      ctx.drawImage(frame, worldPos.x, worldPos.y, width, height);
-      ctx.globalAlpha = 1.0;
-      // Name tag
-      const playerName = (window.Game && window.Game.username) || 'Player';
-      this.drawNameTag(ctx, worldPos.x + width/2, worldPos.y - 10, playerName, 'ghost', null);
-      if (usingCameraSystem) ctx.restore();
-      return;
-    }
-    
+    // Ne töröljük a canvas-t, a Map kezeli azt
     // Karakter kirajzolása
     let char = (window.Player && window.Player.character) ? window.Player.character : (window.selectedCharacter || this.character || 'male1');
     
@@ -224,6 +254,7 @@ const Animation = {
       animType = 'slash';
       currentDirection = this.slashDirection;
       currentFrame = this.slashFrame;
+      console.log('Drawing slash frame:', currentFrame, 'direction:', currentDirection);
     } else {
       // Use normal idle/walk animation
       animType = isMoving ? 'walk' : 'idle';
@@ -240,22 +271,82 @@ const Animation = {
     if (!frames || frames.length === 0) return;
     const frame = frames[currentFrame % frames.length];
     
+    // ÚJ: female1 és female2 task animáció
+    if ((char === 'female1' || char === 'female2' || char === 'female3' || char === 'female4' || char === 'female5' || char === 'female6') && window.Player && window.Player.isTasking && this.frames.task && this.frames.task.length > 0) {
+      // Task animáció frame index számítása (idő alapján, 8 fps)
+      const now = Date.now();
+      const frameIdx = Math.floor((now / 125) % this.frames.task.length);
+      const frame = this.frames.task[frameIdx];
+      const width = frame.width || 64;
+      const height = frame.height || 96;
+      const usingCameraSystem = window.Map && window.Map.camera;
+      const worldPos = usingCameraSystem ? 
+        { x: window.Player.x - width/2, y: window.Player.y - height } :
+        { x: x, y: y };
+      if (usingCameraSystem) {
+        ctx.save();
+        ctx.translate(-window.Map.camera.x, -window.Map.camera.y);
+      }
+      ctx.drawImage(frame, worldPos.x, worldPos.y, width, height);
+      // Name tag
+      const playerName = (window.Game && window.Game.username) || 'Player';
+      const playerRole = (window.Game && window.Game.playerRole) || 'commoner';
+      const groupColor = (window.Game && window.Game.groupColor) || null;
+      this.drawNameTag(ctx, worldPos.x + width/2, worldPos.y - 10, playerName, playerRole, groupColor);
+      if (usingCameraSystem) ctx.restore();
+      return;
+    }
+    
+    // DEATH ANIMÁCIÓ: female1-6
+    if ((char === 'female1' || char === 'female2' || char === 'female3' || char === 'female4' || char === 'female5' || char === 'female6') && window.Player && window.Player.isDead && this.frames.death && this.frames.death.length > 0) {
+      // Death animáció frame index számítása (idő alapján, 6 fps)
+      const now = Date.now();
+      let frameIdx = Math.floor((now - (window.Player.deathStartTime || now)) / 166);
+      if (frameIdx >= this.frames.death.length) frameIdx = this.frames.death.length - 1;
+      const frame = this.frames.death[frameIdx];
+      const width = frame.width || 64;
+      const height = frame.height || 96;
+      const usingCameraSystem = window.Map && window.Map.camera;
+      // Y eltolás: minden frame-mel 4 pixellel lejjebb
+      let yOffset = 0;
+      if (frameIdx < this.frames.death.length - 1) {
+        yOffset = frameIdx * 4;
+      } else {
+        yOffset = (this.frames.death.length - 1) * 4;
+      }
+      const worldPos = usingCameraSystem ? 
+        { x: window.Player.x - width/2, y: window.Player.y - height + yOffset } :
+        { x: x, y: y + yOffset };
+      if (usingCameraSystem) {
+        ctx.save();
+        ctx.translate(-window.Map.camera.x, -window.Map.camera.y);
+      }
+      ctx.drawImage(frame, worldPos.x, worldPos.y, width, height);
+      // Name tag
+      const playerName = (window.Game && window.Game.username) || 'Player';
+      const playerRole = (window.Game && window.Game.playerRole) || 'commoner';
+      const groupColor = (window.Game && window.Game.groupColor) || null;
+      this.drawNameTag(ctx, worldPos.x + width/2, worldPos.y - 10, playerName, playerRole, groupColor);
+      if (usingCameraSystem) ctx.restore();
+      return;
+    }
+    
     // Ha a Map kamera rendszert használ, alkalmazni kell a transform-ot
-    const usingCameraSystem = window.GameMap && window.GameMap.camera;
+    const usingCameraSystem = window.Map && window.Map.camera;
     
     if (usingCameraSystem) {
       ctx.save();
-      ctx.translate(-window.GameMap.camera.x, -window.GameMap.camera.y);
+      ctx.translate(-window.Map.camera.x, -window.Map.camera.y);
     }
     
     // Karakter rajzolása
-    const width = 256;
-    const height = 256;
+    const width = frame.width || 64;
+    const height = frame.height || 96;
     
     // Világkoordinátákban rajzoljuk ha kamera rendszer van
     const worldPos = usingCameraSystem ? 
-      { x: x - width/2, y: y - height } :
-      { x: x - width/2, y: y - height };
+      { x: window.Player.x - width/2, y: window.Player.y - height } :
+      { x: x, y: y };
     
     ctx.drawImage(frame, worldPos.x, worldPos.y, width, height);
       
@@ -263,7 +354,7 @@ const Animation = {
     const playerName = (window.Game && window.Game.username) || 'Player';
     const playerRole = (window.Game && window.Game.playerRole) || 'commoner';
     const groupColor = (window.Game && window.Game.groupColor) || null;
-    this.drawNameTag(ctx, worldPos.x + width/2, worldPos.y - 20, playerName, playerRole, groupColor);
+    this.drawNameTag(ctx, worldPos.x + width/2, worldPos.y - 10, playerName, playerRole, groupColor);
     
     if (usingCameraSystem) {
       ctx.restore();

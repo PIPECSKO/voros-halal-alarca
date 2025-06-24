@@ -1,12 +1,11 @@
 // Main entry point for game
 import Game from './game.js';
 import UI from './ui.js';
-import GameMap from './map.js';
+import Map from './map.js';
 import Player from './player.js';
 import Animation from './animation.js';
 import Audio from './audio.js';
 import NPC from './npc.js';
-import PeerConnector from './peer_connector.js';
 
 // Wait for DOM to load
 window.addEventListener('DOMContentLoaded', () => {
@@ -66,27 +65,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // Fullscreen indikátor megjelenítése/elrejtése
     const indicator = document.getElementById('fullscreen-indicator');
     if (indicator) {
-      if (isFullscreen) {
-        indicator.style.display = 'block';
-        // Clear any existing timeout
-        if (window.fullscreenIndicatorTimeout) {
-          clearTimeout(window.fullscreenIndicatorTimeout);
-        }
-        // Set new timeout to hide after 2 seconds
-        window.fullscreenIndicatorTimeout = setTimeout(() => {
-          if (indicator) {
-            indicator.style.display = 'none';
-            console.log('Fullscreen indicator auto-hidden');
-          }
-        }, 2000);
-      } else {
-        indicator.style.display = 'none';
-        // Clear timeout when exiting fullscreen
-        if (window.fullscreenIndicatorTimeout) {
-          clearTimeout(window.fullscreenIndicatorTimeout);
-          window.fullscreenIndicatorTimeout = null;
-        }
-      }
+      indicator.style.display = isFullscreen ? 'block' : 'none';
     }
     
     // Canvas újraméretezése fullscreen változáskor
@@ -123,19 +102,19 @@ window.addEventListener('DOMContentLoaded', () => {
     console.log('Viewport size:', viewportWidth + 'x' + viewportHeight);
     
     // Frissítjük a Map scaling értékeit is
-    if (window.GameMap) {
-      window.GameMap.scaleX = canvas.width / 1920;
-      window.GameMap.scaleY = canvas.height / 1080;
-      window.GameMap.roomWidth = 1920 * window.GameMap.scaleX;
-      window.GameMap.roomHeight = 1080 * window.GameMap.scaleY;
+    if (window.Map) {
+      window.Map.scaleX = canvas.width / 1920;
+      window.Map.scaleY = canvas.height / 1080;
+      window.Map.roomWidth = 1920 * window.Map.scaleX;
+      window.Map.roomHeight = 1080 * window.Map.scaleY;
     }
     
-    if (window.GameMap && window.GameMap.draw && window.Player) {
-      window.GameMap.clear();
-      window.GameMap.draw(canvas.getContext('2d'), window.Player.x, window.Player.y);
-    } else if (window.GameMap && window.GameMap.draw) {
-      window.GameMap.clear();
-      window.GameMap.draw(canvas.getContext('2d'));
+    if (window.Map && window.Map.draw && window.Player) {
+      window.Map.clear();
+      window.Map.draw(window.Player.x, window.Player.y);
+    } else if (window.Map && window.Map.draw) {
+      window.Map.clear();
+      window.Map.draw();
     }
   }
   resizeCanvas();
@@ -144,7 +123,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // Inicializálás - fontos: Map először, hogy a scaling beállításra kerüljön
   async function initializeGame() {
     UI.init();
-    GameMap.init(); // Először a GameMap, hogy beállítsa a scaling értékeket
+    Map.init(); // Először a Map, hogy beállítsa a scaling értékeket
     Audio.init(); // Audio rendszer inicializálása
     Player.init(); // Utána a Player, hogy használhassa a scaling értékeket
     NPC.init(); // Initialize NPCs early so they're available
@@ -155,10 +134,8 @@ window.addEventListener('DOMContentLoaded', () => {
     window.NPC = NPC;
     window.Player = Player;
     window.Animation = Animation;
-    window.GameMap = GameMap;
+    window.Map = Map;
     window.Game = Game;
-    window.PeerConnector = PeerConnector;
-    window.UI = UI;
     
     // Setup main menu volume controls
     setupMainMenuVolumeControls();

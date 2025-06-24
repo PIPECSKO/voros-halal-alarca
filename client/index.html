@@ -4,12 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Red Death's Mask</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <!-- Add PeerJS library -->
-  <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 </head>
 <body>
   <div id="game-container">
@@ -24,56 +19,27 @@
       </div>
     </div>
     
-    <!-- Connecting Screen -->
-    <div id="connecting-screen" class="screen" style="display: none;">
-      <div class="connecting-content">
-        <h1 class="connecting-title">Kapcsolódás...</h1>
-        <div class="connecting-spinner"></div>
-        <div class="connecting-tip">Kérlek, várj amíg a kapcsolat létrejön...</div>
-      </div>
-    </div>
-    
     <!-- Menu Screen -->
     <div id="menu-screen" class="screen" style="display: flex;">
       <div class="menu-container modern-menu">
         <h1 class="menu-title">Vörös halál álarca</h1>
         <div class="input-group">
-          <input type="text" id="username-input" placeholder="Add meg a neved...">
-        </div>
+          <input type="text" id="username-input" placeholder="Add meg a neved..." maxlength="16">
+          </div>
         <div class="button-group">
           <button id="host-button" class="menu-button">Játék indítása</button>
           <button id="join-button" class="menu-button">Csatlakozás</button>
           <button id="fullscreen-button" class="menu-button">🖥️ Teljes képernyő</button>
-        </div>
+          </div>
         <div class="input-group" id="join-code-group" style="display:none;">
           <label for="game-code-input" style="color: #8b0000; margin-bottom: 5px; display: block;">Add meg a szobakódot:</label>
           <div style="display: flex; gap: 10px; align-items: center;">
-            <input type="text" id="game-code-input" placeholder="Szobakód..." style="flex: 1;">
+            <input type="text" id="game-code-input" placeholder="Szobakód..." maxlength="8" style="flex: 1;">
             <button id="join-now-button" class="menu-button" style="margin: 0;">Csatlakozás most</button>
           </div>
         </div>
         <div class="game-code-container" style="display: none;">
           <p>Szobakód: <span id="game-code"></span></p>
-        </div>
-        
-        <!-- Volume Controls -->
-        <div class="volume-controls-main-menu" style="
-          margin-top: 30px;
-          padding-top: 20px;
-          border-top: 2px solid #8b0000;
-          text-align: center;
-        ">
-          <h3 style="color: #8b0000; margin-bottom: 15px; font-family: 'MedievalSharp', serif;">Hangerő beállítások</h3>
-          <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-              <label style="color: #8b0000; font-size: 14px; font-family: 'MedievalSharp', serif;">Zene hangerő</label>
-              <input type="range" id="main-menu-music-volume-slider" min="0" max="100" value="40" style="
-                width: 200px;
-                accent-color: #8b0000;
-              ">
-              <span id="main-menu-music-volume-display" style="color: #8b0000; font-size: 12px; font-family: 'MedievalSharp', serif;">40%</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -96,69 +62,12 @@
             <div id="character-gallery" class="character-gallery"></div>
             <div class="character-preview-label">Előnézet</div>
             <div id="character-preview" class="character-preview"></div>
-            <button id="start-button" class="menu-button">Játék indítása</button>
-            <!-- DEV ROLE SELECT DROPDOWN -->
-            <div id="dev-role-select-container" style="margin-top: 10px; display: none;">
-              <label for="dev-role-select">Szerep (dev):</label>
-              <select id="dev-role-select">
-                <option value="commoner">Polgár</option>
-                <option value="noble">Nemes</option>
-                <option value="prince">Herceg</option>
-                <option value="plague">Pestis</option>
-              </select>
-            </div>
-            <div id="color-select-container" style="margin-top: 10px;">
-              <label for="color-select">Szín:</label>
-              <select id="color-select">
-                <option value="red">Piros</option>
-                <option value="blue">Kék</option>
-                <option value="green">Zöld</option>
-                <option value="yellow">Sárga</option>
-                <option value="purple">Lila</option>
-                <option value="orange">Narancs</option>
-              </select>
-            </div>
-          </div>
+            <button id="character-select-confirm" class="menu-button">Kiválasztom</button>
+        </div>
         </div>
         <div class="button-group">
           <button id="ready-button">Kész vagyok</button>
           <button id="start-button" style="display: none;">Játék indítása</button>
-        </div>
-        
-        <!-- Volume Controls in Lobby -->
-        <div class="volume-controls-lobby" style="
-          margin-top: auto;
-          padding: 8px;
-          border-top: 2px solid #8b0000;
-          text-align: center;
-          width: 100%;
-          background: rgba(26, 0, 0, 0.95);
-          border: 2px solid #8b0000;
-          border-radius: 8px;
-          flex-shrink: 0;
-        ">
-          <h3 style="color: #8b0000; margin-bottom: 10px; font-family: 'MedievalSharp', serif; font-size: 16px;">Hangerő beállítások</h3>
-          <div style="display: flex; justify-content: space-around; align-items: center; gap: 30px;">
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-              <label style="color: #8b0000; font-size: 14px; font-family: 'MedievalSharp', serif;">Zene hangerő</label>
-              <input type="range" id="lobby-music-volume-slider" min="0" max="100" value="40" style="
-                width: 150px;
-                accent-color: #8b0000;
-              ">
-              <span id="lobby-music-volume-display" style="color: #8b0000; font-size: 12px; font-family: 'MedievalSharp', serif;">40%</span>
-            </div>
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-              <label style="color: #8b0000; font-size: 14px; font-family: 'MedievalSharp', serif;">Hangeffektek</label>
-              <input type="range" id="lobby-sfx-volume-slider" min="0" max="100" value="60" style="
-                width: 150px;
-                accent-color: #8b0000;
-              ">
-              <span id="lobby-sfx-volume-display" style="color: #8b0000; font-size: 12px; font-family: 'MedievalSharp', serif;">60%</span>
-            </div>
-          </div>
-        </div>
-        <div id="lobby-game-code" style="text-align:center; font-size:1.5rem; color:#FFD700; margin-bottom:1rem; letter-spacing: 3px;">
-          Szoba kód: <span id="lobby-game-code-value"></span>
         </div>
       </div>
     </div>
@@ -170,9 +79,6 @@
         <div class="role-display"></div>
         <div class="timer-display"></div>
         <div class="mini-map"></div>
-        <div class="task-list-container">
-          <ul id="task-list"></ul>
-        </div>
         
         <!-- Fullscreen Indicator -->
         <div id="fullscreen-indicator" style="position: absolute; top: 10px; right: 10px; background: rgba(26, 0, 0, 0.8); color: #8b0000; padding: 5px 10px; border: 1px solid #8b0000; font-size: 12px; display: none;">
@@ -185,9 +91,9 @@
             <span class="action-icon">🦠</span>
             <span class="action-text">Fertőz</span>
           </button>
-          <button id="slash-button" class="action-button" style="display: none;">
-            <span class="action-icon">🗡️</span>
-            <span class="action-text">Suhintás</span>
+          <button id="stab-button" class="action-button" style="display: none;">
+            <span class="action-icon">⚔️</span>
+            <span class="action-text">Suhint</span>
           </button>
           <button id="task-button" class="action-button" style="display: none;">
             <span class="action-icon">📜</span>
@@ -263,6 +169,9 @@
     <span id="connection-text">Kapcsolódás...</span>
   </div>
 
+  <!-- Socket.IO Client -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  
   <!-- Game Scripts -->
   <script type="module">
     // Show the loading screen immediately
@@ -287,6 +196,6 @@
     window.debugMode = true;
   </script>
   
-  <script type="module" src="src/main.js?v=20251610220000"></script>
+  <script type="module" src="src/main.js"></script>
 </body>
 </html> 

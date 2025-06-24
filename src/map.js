@@ -1,7 +1,5 @@
 // Map Handler - 7 Room System
 
-import PeerConnector from './peer_connector.js';
-
 const Map = {
   ctx: null,
   canvas: null,
@@ -136,44 +134,6 @@ const Map = {
     console.log("Map initialized with", this.rooms.length, "rooms, size:", this.roomWidth + "x" + this.roomHeight);
     console.log("Canvas size:", this.canvas.width + "x" + this.canvas.height);
     console.log("Scale factors:", this.scaleX + "x" + this.scaleY);
-
-    // At the end of the map object or after initialization, add peer event hooks:
-
-    // Example: Broadcast player position and room changes
-    if (typeof PeerConnector !== 'undefined') {
-      // Listen for map-related events from peers
-      PeerConnector.on('playerMoved', (data) => {
-        // Handle remote player movement (update their position on the map, etc.)
-        // You may want to update a remotePlayers object or similar
-        if (window.Game && window.Game.players && data && data.id) {
-          window.Game.players[data.id] = {
-            ...window.Game.players[data.id],
-            x: data.position.x,
-            y: data.position.y,
-            isMoving: data.isMoving,
-            direction: data.direction,
-            animationFrame: data.animationFrame
-          };
-        }
-      });
-
-      // Listen for room transition events
-      PeerConnector.on('roomTransition', (data) => {
-        // Handle remote room transitions if needed
-        // (e.g., update remote player's room, trigger effects, etc.)
-      });
-
-      // Example: Emit player movement when local player moves
-      // (You may want to call this from your player update logic)
-      window.emitPlayerMove = function(playerData) {
-        PeerConnector.emit('playerMoved', playerData);
-      };
-
-      // Example: Emit room transition
-      window.emitRoomTransition = function(roomData) {
-        PeerConnector.emit('roomTransition', roomData);
-      };
-    }
   },
 
   // Check room transitions based on player position
@@ -199,9 +159,7 @@ const Map = {
   
   // Set camera target for smooth transition
   setCameraTarget(targetX, targetY) {
-    // Clamp targetX to prevent moving beyond the last room
-    const maxX = (this.rooms.length - 1) * this.roomWidth;
-    this.camera.targetX = Math.max(0, Math.min(targetX, maxX));
+    this.camera.targetX = targetX;
     this.camera.targetY = targetY;
   },
   
@@ -349,6 +307,9 @@ const Map = {
     const minimapX = this.canvas.width - minimapWidth - 15;
     const minimapY = 15;
     
+    this.ctx.fillStyle = 'rgba(26, 0, 0, 0.9)';
+    this.ctx.fillRect(minimapX, minimapY, minimapWidth, minimapHeight);
+    
     this.ctx.strokeStyle = '#8b0000';
     this.ctx.lineWidth = 2;
     this.ctx.strokeRect(minimapX, minimapY, minimapWidth, minimapHeight);
@@ -369,25 +330,18 @@ const Map = {
       if (index === this.currentRoom) {
         this.ctx.strokeStyle = '#gold';
         this.ctx.lineWidth = 2;
-        this.ctx.strokeRect(roomX, roomsY, roomSize, roomSize);
+        this.ctx.strokeRect(roomX - 1, roomsY - 1, roomSize + 2, roomSize + 2);
       }
     });
     
-    const dotRadius = 4;
-    let roomIndex = this.currentRoom;
-    // If player is beyond the last room, force the dot to stay in the blue room
-    if (playerX >= (this.rooms.length - 1) * this.roomWidth) {
-      roomIndex = this.rooms.length - 1; // blue room index
-    }
-    const roomX = roomsStartX + (roomIndex * roomSpacing);
-    const playerMinimapX = roomX + roomSize / 2;
+    const playerMinimapX = roomsStartX + (this.currentRoom * roomSpacing) + roomSize / 2;
     const playerMinimapY = roomsY + roomSize / 2;
     
     this.ctx.fillStyle = '#FFD700';
     this.ctx.strokeStyle = '#8b0000';
     this.ctx.lineWidth = 1;
     this.ctx.beginPath();
-    this.ctx.arc(playerMinimapX, playerMinimapY, dotRadius, 0, 2 * Math.PI);
+    this.ctx.arc(playerMinimapX, playerMinimapY, 4, 0, 2 * Math.PI);
     this.ctx.fill();
     this.ctx.stroke();
   },

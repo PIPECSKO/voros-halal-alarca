@@ -47,22 +47,19 @@ const UI = {
       // Main menu buttons
       this.addClickHandler('host-button', () => {
         const username = document.getElementById('username-input')?.value?.trim() || 'Player';
-        console.log('[UI] Host button clicked, username:', username, 'peer connected:', window.PeerConnector && window.PeerConnector.isConnected);
         if (username) {
           Game.username = username;
-          if (window.PeerConnector && window.PeerConnector.isConnected) {
-            console.log('[UI] Calling Game.hostGame');
-            Game.hostGame(username);
+          if (Game.socket && Game.socket.connected) {
+            Game.socket.emit('hostGame', username);
           } else {
             // OFFLINE: automatikus játékindítás karakterrel
-            console.log('[UI] OFFLINE fallback, going straight to game-screen');
             Game.gameCode = Math.floor(Math.random() * 90000 + 10000).toString(); // Generate random 5-digit code
             Game.isHost = true;
             this.updateGameCode(Game.gameCode);
             this.showScreen('game-screen');
             Game.character = window.selectedCharacter || 'male1';
             try {
-              if (typeof GameMap !== 'undefined') GameMap.init();
+              if (typeof Map !== 'undefined') Map.init();
               if (typeof Player !== 'undefined') Player.init();
               if (typeof Animation !== 'undefined') Animation.init(Game.character);
             } catch (e) {
@@ -115,25 +112,36 @@ const UI = {
         Game.gameCode = gameCode;
         
         // Attempt to join the game
-        if (Game.peer && Game.peer.isConnected) {
-          Game.joinGame(gameCode, username);
+        if (Game.socket && Game.socket.connected) {
+          Game.socket.emit('joinGame', { gameCode, username });
         } else {
-          console.log("Peer not connected, attempting to join offline with code:", gameCode);
+          console.log("Socket not connected, attempting to join offline with code:", gameCode);
           this.showError("Nincs kapcsolat a szerverrel. Próbáld újra később, vagy ellenőrizd az internetkapcsolatot.");
         }
       });
       
-      // Start game button
+      // Start button
       this.addClickHandler('start-button', () => {
-        if (Game && Game.isHost) {
-          Game.startGame();
+        if (Game.socket && Game.socket.connected) {
+          Game.socket.emit('startGame');
+        } else {
+          this.showScreen('game-screen');
+          Game.character = window.selectedCharacter || 'male1';
+          try {
+            if (typeof Map !== 'undefined') Map.init();
+            if (typeof Player !== 'undefined') Player.init();
+            if (typeof Animation !== 'undefined') Animation.init(Game.character);
+          } catch (e) {
+            console.error("Error initializing game components:", e);
+          }
+          Game.gameLoop();
         }
       });
       
       // Ready button
       this.addClickHandler('ready-button', () => {
-        if (Game.peer && Game.peer.isConnected) {
-          Game.toggleReady();
+        if (Game.socket && Game.socket.connected) {
+          Game.socket.emit('toggleReady');
         } else {
           // Offline mode - just toggle the button text
           const readyBtn = document.getElementById('ready-button');
@@ -144,6 +152,24 @@ const UI = {
         }
       });
       
+      // Character selection confirm button
+      this.addClickHandler('character-select-confirm', () => {
+        if (window.selectedCharacter) {
+          console.log('Character confirmed:', window.selectedCharacter);
+          // Update Player and Animation character
+          if (window.Player) {
+            window.Player.character = window.selectedCharacter;
+          }
+          if (window.Animation) {
+            window.Animation.character = window.selectedCharacter;
+            window.Animation.init(window.selectedCharacter);
+          }
+          this.showError(`Karakter kiválasztva: ${window.selectedCharacter}`);
+        } else {
+          this.showError('Kérlek válassz karaktert először!');
+        }
+      });
+
       // DEBUG: Manual character setup button
       this.addClickHandler('debug-character-setup', () => {
         console.log('🔧 DEBUG: Manual character setup triggered');
@@ -198,7 +224,6 @@ const UI = {
   // Show a screen (hide all others)
   showScreen(screenId) {
     try {
-      console.log('[UI] showScreen called with:', screenId); // Debug log
       // Hide all screens
       const screens = document.querySelectorAll('.screen');
       screens.forEach(screen => {
@@ -214,12 +239,7 @@ const UI = {
         if (screenId === 'lobby-screen') {
           // Kis delay után setupoljuk, hogy az elemek már létezzenek
           setTimeout(() => {
-            this.setupLobbyCharacterSelection();
-            // --- Ensure game code is set after render ---
-            if (window.Game && window.Game.gameCode) {
-              // Display the full game code (including timestamp) for joining
-              UI.updateGameCode(window.Game.gameCode);
-            }
+          this.setupLobbyCharacterSelection();
           }, 100);
         }
       } else {
@@ -233,17 +253,13 @@ const UI = {
   // Show error message
   showError(message) {
     try {
-      if (!message) {
-        // Hide error overlay if message is empty
-        const errorOverlay = document.getElementById('error-message');
-        if (errorOverlay) errorOverlay.style.display = 'none';
-        return;
-      }
       console.error("UI Error:", message);
+      
       const errorText = document.getElementById('error-text');
       if (errorText) {
         errorText.textContent = message;
       }
+      
       const errorOverlay = document.getElementById('error-message');
       if (errorOverlay) {
         errorOverlay.style.display = 'flex';
@@ -259,8 +275,7 @@ const UI = {
   // Update game code display
   updateGameCode(gameCode) {
     try {
-      console.log('[UI] updateGameCode called with:', gameCode); // DEBUG LOG
-      const codeElement = document.getElementById('lobby-game-code-value');
+      const codeElement = document.getElementById('game-code');
       if (codeElement) {
         codeElement.textContent = gameCode;
       }
@@ -286,8 +301,8 @@ const UI = {
       let myId = null;
       if (window.Game && window.Game.playerId) {
         myId = window.Game.playerId;
-      } else if (window.Game && window.Game.peer && window.Game.peer.id) {
-        myId = window.Game.peer.id;
+      } else if (window.Game && window.Game.socket && window.Game.socket.id) {
+        myId = window.Game.socket.id;
       }
       console.log('My ID for player list:', myId); // DEBUG LOG
       
@@ -344,20 +359,11 @@ const UI = {
       }
       
       // Update start button status if we're the host
-      const startBtn = document.getElementById('start-button');
+      const startBtn = document.getElementById('start-game-button');
       if (startBtn && window.Game && window.Game.isHost) {
-        if (readyCount === playerCount && playerCount > 1) {
-          startBtn.disabled = false;
-          startBtn.textContent = 'Játék indítása';
-        } else if (playerCount <= 1) {
-          startBtn.disabled = true;
-          startBtn.textContent = 'Legalább 2 játékos kell!';
-        } else {
-          startBtn.disabled = true;
-          startBtn.textContent = 'Mindenki legyen kész!';
-        }
-        startBtn.style.display = '';
-        startBtn.style.visibility = 'visible';
+        const allReady = readyCount === playerCount && playerCount > 0;
+        startBtn.disabled = !allReady;
+        startBtn.textContent = allReady ? 'Játék indítása' : 'Játék indítása (várj hogy mindenki kész legyen)';
       }
       
       console.log(`Player list updated: ${readyCount}/${playerCount} ready, my ready status:`, myReady); // DEBUG LOG
@@ -369,8 +375,8 @@ const UI = {
   // Update role display
   updateRoleDisplay(role) {
     try {
-      const roleDisplay = document.querySelector('.role-display');
-      if (roleDisplay) {
+      const roleValue = document.getElementById('role-value');
+      if (roleValue) {
         // Translate role to Hungarian
         const roleNames = {
           'prince': 'Herceg',
@@ -379,10 +385,11 @@ const UI = {
           'plague': 'Pestis'
         };
         
-        roleDisplay.textContent = roleNames[role] || role;
+        roleValue.textContent = roleNames[role] || role;
         
         // Add role-specific styling
-        roleDisplay.className = 'role-display ' + role;
+        roleValue.className = '';
+        roleValue.classList.add(role);
       }
     } catch (error) {
       console.error("Error updating role display:", error);
@@ -402,14 +409,14 @@ const UI = {
         { id: 'dancing', name: 'Táncolás', icon: 'assets/images/task/dancing_icon.png' }
       ];
       allTasks.forEach(task => {
-          const li = document.createElement('li');
+        const li = document.createElement('li');
         const img = document.createElement('img');
         img.src = task.icon;
         img.alt = task.name;
         li.appendChild(img);
         li.appendChild(document.createTextNode(task.name));
-          tasksList.appendChild(li);
-        });
+        tasksList.appendChild(li);
+      });
     } catch (error) {
       console.error("Error updating task list:", error);
     }
@@ -541,32 +548,32 @@ const UI = {
   // Handler for task action button
   handleTaskAction() {
     const taskId = this.dataset.targetId;
-    if (taskId && Game.peer && Game.peer.isConnected) {
-      Game.completeTask(taskId);
+    if (taskId && Game.socket) {
+      Game.socket.emit('completeTask', taskId);
     }
   },
   
   // Handler for clean body action button
   handleCleanBodyAction() {
     const bodyId = this.dataset.targetId;
-    if (bodyId && Game.peer && Game.peer.isConnected) {
-      Game.cleanBody(bodyId);
+    if (bodyId && Game.socket) {
+      Game.socket.emit('cleanBody', bodyId);
     }
   },
   
   // Handler for infect action button
   handleInfectAction() {
     const targetId = this.dataset.targetId;
-    if (targetId && Game.peer && Game.peer.isConnected) {
-      Game.infect(targetId);
+    if (targetId && Game.socket) {
+      Game.socket.emit('infect', targetId);
     }
   },
   
   // Handler for stab action button
   handleStabAction() {
     const targetId = this.dataset.targetId;
-    if (targetId && Game.peer && Game.peer.isConnected) {
-      Game.stab(targetId);
+    if (targetId && Game.socket) {
+      Game.socket.emit('stab', targetId);
     }
   },
   
@@ -610,10 +617,10 @@ const UI = {
     console.log('🔍 setupLobbyCharacterSelection called! - NEW VERSION');
     const gallery = document.getElementById('character-gallery');
     if (!gallery) {
-      console.warn('character-gallery not found!');
+      console.error('❌ character-gallery element not found!');
       return;
     }
-    console.log('✅ character-gallery found:', gallery, gallery.style.display);
+    console.log('✅ character-gallery found:', gallery);
     
     // FORCE CLEAR EVERYTHING
     gallery.innerHTML = '';
@@ -666,20 +673,6 @@ const UI = {
             window.selectedCharacter = charKey;
             Array.from(gallery.children).forEach(child => child.style.border = '3px solid transparent');
             img.style.border = '3px solid #FFD700';
-            // Update preview
-            const preview = document.getElementById('character-preview');
-            if (preview) {
-              preview.innerHTML = '';
-              const previewImg = document.createElement('img');
-              previewImg.src = img.src;
-              previewImg.alt = charKey;
-              previewImg.style.width = '80px';
-              previewImg.style.height = '120px';
-              previewImg.style.objectFit = 'contain';
-              preview.appendChild(previewImg);
-            }
-            // Remove error message if any
-            if (UI && UI.showError) UI.showError('');
             console.log('Selected character:', charKey);
           };
           gallery.appendChild(img);
@@ -731,20 +724,6 @@ const UI = {
                 window.selectedCharacter = result.charKey;
                 Array.from(gallery.children).forEach(child => child.style.border = '3px solid transparent');
                 img.style.border = '3px solid #FFD700';
-                // Update preview
-                const preview = document.getElementById('character-preview');
-                if (preview) {
-                  preview.innerHTML = '';
-                  const previewImg = document.createElement('img');
-                  previewImg.src = img.src;
-                  previewImg.alt = result.charKey;
-                  previewImg.style.width = '80px';
-                  previewImg.style.height = '120px';
-                  previewImg.style.objectFit = 'contain';
-                  preview.appendChild(previewImg);
-                }
-                // Remove error message if any
-                if (UI && UI.showError) UI.showError('');
                 console.log('Selected character:', result.charKey);
               };
               gallery.appendChild(img);
@@ -774,102 +753,13 @@ const UI = {
           window.selectedCharacter = 'prince';
           Array.from(gallery.children).forEach(child => child.style.border = '3px solid transparent');
           img.style.border = '3px solid #FFD700';
-          // Update preview
-          const preview = document.getElementById('character-preview');
-          if (preview) {
-            preview.innerHTML = '';
-            const previewImg = document.createElement('img');
-            previewImg.src = img.src;
-            previewImg.alt = 'prince';
-            previewImg.style.width = '80px';
-            previewImg.style.height = '120px';
-            previewImg.style.objectFit = 'contain';
-            preview.appendChild(previewImg);
-          }
-          // Remove error message if any
-          if (UI && UI.showError) UI.showError('');
           console.log('Selected character: prince');
         };
         gallery.appendChild(img);
       };
     }
     
-    // Automatically show male characters by default
-    this.selectedGender = 'male';
-    this.renderCharacterGallery(allMaleCharacters);
-
-    // Show dev role select if present
-    const devRoleSelectContainer = document.getElementById('dev-role-select-container');
-    if (devRoleSelectContainer) {
-      devRoleSelectContainer.style.display = 'block';
-      const devRoleSelect = document.getElementById('dev-role-select');
-      if (devRoleSelect) {
-        devRoleSelect.onchange = (e) => {
-          const role = e.target.value;
-          if (window.Game) {
-            window.Game.devSelectedRole = role;
-            console.log('[DEV] Selected role:', role);
-          }
-        };
-      }
-    }
-
-    // Color select
-    const colorSelect = document.getElementById('color-select');
-    if (colorSelect) {
-      colorSelect.onchange = (e) => {
-        const color = e.target.value;
-        if (window.Game) {
-          window.Game.selectedColor = color;
-          console.log('[LOBBY] Selected color:', color);
-        }
-      };
-      // Set default color if not already set
-      if (window.Game && !window.Game.selectedColor) {
-        window.Game.selectedColor = colorSelect.value;
-      }
-    }
-
     console.log('✅ Character selection setup completed!');
-  },
-  
-  // Render character gallery
-  renderCharacterGallery(characters) {
-    const gallery = document.getElementById('character-gallery');
-    if (!gallery) return;
-    gallery.innerHTML = '';
-    characters.forEach(charKey => {
-      const img = document.createElement('img');
-      img.src = `assets/images/characters/males/${charKey}/idle/${charKey}_idle_facing_right1.png?v=${Date.now()}`;
-      img.alt = charKey;
-      img.style.cursor = 'pointer';
-      img.style.border = '3px solid transparent';
-      img.style.borderRadius = '5px';
-      img.style.width = '80px';
-      img.style.height = '120px';
-      img.style.objectFit = 'contain';
-      img.onclick = () => {
-        window.selectedCharacter = charKey;
-        Array.from(gallery.children).forEach(child => child.style.border = '3px solid transparent');
-        img.style.border = '3px solid #FFD700';
-        // Update preview
-        const preview = document.getElementById('character-preview');
-        if (preview) {
-          preview.innerHTML = '';
-          const previewImg = document.createElement('img');
-          previewImg.src = img.src;
-          previewImg.alt = charKey;
-          previewImg.style.width = '80px';
-          previewImg.style.height = '120px';
-          previewImg.style.objectFit = 'contain';
-          preview.appendChild(previewImg);
-        }
-        // Remove error message if any
-        if (UI && UI.showError) UI.showError('');
-        console.log('Selected character:', charKey);
-      };
-      gallery.appendChild(img);
-    });
   }
 };
 
@@ -943,40 +833,35 @@ const TaskBar = {
       startX: 600,  // Card table start position in room
       endX: 1320,   // Card table end position in room
       roomIndex: 4, // Green room is at index 4
-      id: 'cards',  // Unique task ID
-      y: 713       // Fixed Y position for task
+      id: 'cards'   // Unique task ID
     },
     'red': { 
       name: 'Étkezőasztal', 
-      startX: 500,  // Dining table start position in room
-      endX: 1420,   // Dining table end position in room
+      startX: 500,  // Dining table start position in room (slightly expanded)
+      endX: 1420,   // Dining table end position in room (slightly expanded)
       roomIndex: 5, // Red room is at index 5
-      id: 'dining', // Unique task ID
-      y: 713       // Fixed Y position for task
+      id: 'dining'  // Unique task ID
     },
     'blue': { 
       name: 'Táncszőnyeg', 
-      startX: 600,  // Dance floor start position in room
-      endX: 1320,   // Dance floor end position in room
+      startX: 600,  // Dance floor start position in room (expanded)
+      endX: 1320,   // Dance floor end position in room (expanded)
       roomIndex: 6, // Blue room is at index 6
-      id: 'dancing', // Unique task ID
-      y: 713       // Fixed Y position for task
+      id: 'dancing' // Unique task ID
     },
     'purple': {
       name: 'Bárpult',
-      startX: 488,  // Bar start position in room
-      endX: 1432,   // Bar end position in room
+      startX: 488, // Bar start position in room (15% margin)
+      endX: 1432,  // Bar end position in room (15% margin)
       roomIndex: 1, // Purple room is at index 1
-      id: 'drinking', // Unique task ID
-      y: 713       // Fixed Y position for task
+      id: 'drinking' // Unique task ID
     },
     'white': {
       name: 'Kanapé',
-      startX: 672,  // Sofa start position in room
-      endX: 1248,   // Sofa end position in room
+      startX: 672, // Sofa start position in room (80% margin)
+      endX: 1248,  // Sofa end position in room (80% margin)
       roomIndex: 2, // White room is at index 2
-      id: 'smoking', // Unique task ID
-      y: 713       // Fixed Y position for task
+      id: 'smoking' // Unique task ID
     }
   },
 
@@ -1100,7 +985,7 @@ const TaskBar = {
     if (!this.currentTask) return;
     
     // Check if player is still in task zone (with tolerance)
-    if (window.Player && window.GameMap) {
+    if (window.Player && window.Map) {
       const playerPosition = { x: window.Player.x, y: window.Player.y };
       if (!this.isPlayerInTaskZone(playerPosition)) {
         console.log('❌ Task cancelled - player left task zone');
@@ -1162,7 +1047,7 @@ const TaskBar = {
   canStartTask(playerPosition) {
     if (this.currentTask) return false; // Already tasking
     
-    const currentRoom = window.GameMap ? window.GameMap.getCurrentRoom() : null;
+    const currentRoom = window.Map ? window.Map.getCurrentRoom() : null;
     if (!currentRoom) return false;
     
     const taskZone = this.taskZones[currentRoom.id];
@@ -1171,7 +1056,7 @@ const TaskBar = {
     // Check if task is already completed
     if (this.isTaskCompleted(taskZone.id)) return false;
     
-    const roomStartX = taskZone.roomIndex * (window.GameMap ? window.GameMap.roomWidth : 1920);
+    const roomStartX = taskZone.roomIndex * (window.Map ? window.Map.roomWidth : 1920);
     const zoneStartX = roomStartX + taskZone.startX;
     const zoneEndX = roomStartX + taskZone.endX;
     
@@ -1184,13 +1069,13 @@ const TaskBar = {
   isPlayerInTaskZone(playerPosition) {
     if (!this.currentTask) return false;
     
-    const currentRoom = window.GameMap ? window.GameMap.getCurrentRoom() : null;
+    const currentRoom = window.Map ? window.Map.getCurrentRoom() : null;
     if (!currentRoom) return false;
     
     const taskZone = this.taskZones[currentRoom.id];
     if (!taskZone) return false;
     
-    const roomStartX = taskZone.roomIndex * (window.GameMap ? window.GameMap.roomWidth : 1920);
+    const roomStartX = taskZone.roomIndex * (window.Map ? window.Map.roomWidth : 1920);
     const zoneStartX = roomStartX + taskZone.startX;
     const zoneEndX = roomStartX + taskZone.endX;
     
@@ -1200,13 +1085,13 @@ const TaskBar = {
 
   // Draw task bar at bottom of screen
   drawTaskBar(canvas, ctx, playerPosition) {
-    if (!canvas || !ctx || !window.GameMap) return;
+    if (!canvas || !ctx || !window.Map) return;
     
     // Update task progress
     this.updateTask();
     
     // Get current room
-    const currentRoom = window.GameMap.getCurrentRoom();
+    const currentRoom = window.Map.getCurrentRoom();
     if (!currentRoom) return;
     
     // Check if current room has a task zone
@@ -1220,7 +1105,7 @@ const TaskBar = {
     const barWidth = canvas.width - (barPadding * 2);
     
     // Calculate room boundaries in world coordinates
-    const roomStartX = taskZone.roomIndex * window.GameMap.roomWidth;
+    const roomStartX = taskZone.roomIndex * window.Map.roomWidth;
     const zoneStartX = roomStartX + taskZone.startX;
     const zoneEndX = roomStartX + taskZone.endX;
     const zoneWidth = zoneEndX - zoneStartX;
@@ -1238,7 +1123,7 @@ const TaskBar = {
     ctx.strokeRect(barPadding, barY, barWidth, barHeight);
     
     // Calculate task zone representation on the bar (proportional to room)
-    const roomWidth = window.GameMap.roomWidth;
+    const roomWidth = window.Map.roomWidth;
     const zoneStartPercent = taskZone.startX / roomWidth;
     const zoneWidthPercent = (taskZone.endX - taskZone.startX) / roomWidth;
     
